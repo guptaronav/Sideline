@@ -8,8 +8,7 @@ struct RoleGateView: View {
             VStack(alignment: .leading, spacing: Space.section) {
                 VStack(alignment: .leading, spacing: 10) {
                     Eyebrow("Ridgeline High · Athletics")
-                    (Text("Sideline").foregroundColor(Palette.ink) + Text(".").foregroundColor(Palette.flag))
-                        .font(Typeface.display(40))
+                    SidelineLockup(size: 40)
                     HashRule()
                     Text("Who's using Sideline?")
                         .font(Typeface.display(26))

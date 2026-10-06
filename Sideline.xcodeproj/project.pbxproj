@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		28BD4BC61DE683F692C4D516 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B0997CEABF87B4B4B3D59AC /* Theme.swift */; };
+		37AA6E8AD580C99636267800 /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E9AAB106F8BBBE166111FEC /* Brand.swift */; };
+		3A3DD2211138E2EE98CBCE19 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A41C4D3C466BA87F26026E61 /* Assets.xcassets */; };
 		3E6B77FCF454DF1757768254 /* AthleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592F9EC0DD3D2A495E9FBBAC /* AthleteView.swift */; };
 		41EC64D475B0375844F31AE2 /* CheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32A6E6210B93A7212CA13C1 /* CheckView.swift */; };
 		572650BE016F2C0FB6F25795 /* SidelineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5610B6ABBCB292364C14EF1 /* SidelineApp.swift */; };
@@ -23,11 +25,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0E9AAB106F8BBBE166111FEC /* Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brand.swift; sourceTree = "<group>"; };
 		10CD784DBD346AEBE64DD90B /* Sideline.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Sideline.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B0997CEABF87B4B4B3D59AC /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1DC5D1308227084C2B7BB2F2 /* SymptomCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymptomCheckInView.swift; sourceTree = "<group>"; };
 		208A3660EDDBF13C10C05555 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		592F9EC0DD3D2A495E9FBBAC /* AthleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteView.swift; sourceTree = "<group>"; };
+		A41C4D3C466BA87F26026E61 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C014638D9CFDD7DBA6C00271 /* ReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportView.swift; sourceTree = "<group>"; };
 		C32A6E6210B93A7212CA13C1 /* CheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckView.swift; sourceTree = "<group>"; };
 		C9CAD7792F5D31FE4209A780 /* RosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterView.swift; sourceTree = "<group>"; };
@@ -43,8 +47,10 @@
 		04CBCE90611869E71820042B /* Sideline */ = {
 			isa = PBXGroup;
 			children = (
+				A41C4D3C466BA87F26026E61 /* Assets.xcassets */,
 				FB824D4C1D6EABEF58CB2A80 /* AthleteDashboardView.swift */,
 				592F9EC0DD3D2A495E9FBBAC /* AthleteView.swift */,
+				0E9AAB106F8BBBE166111FEC /* Brand.swift */,
 				C32A6E6210B93A7212CA13C1 /* CheckView.swift */,
 				208A3660EDDBF13C10C05555 /* Models.swift */,
 				E15BEA8BCA4AE3AC8DEFB31E /* ProviderDashboardView.swift */,
@@ -84,6 +90,7 @@
 			buildConfigurationList = 0820ADCCDD8EEB2838F8DAEB /* Build configuration list for PBXNativeTarget "Sideline" */;
 			buildPhases = (
 				9918FF9195E76302CE351A7B /* Sources */,
+				07F7DEC282DA6E27B255F315 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -126,6 +133,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		07F7DEC282DA6E27B255F315 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3A3DD2211138E2EE98CBCE19 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		9918FF9195E76302CE351A7B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -133,6 +151,7 @@
 			files = (
 				F6B066805130A6913946B42B /* AthleteDashboardView.swift in Sources */,
 				3E6B77FCF454DF1757768254 /* AthleteView.swift in Sources */,
+				37AA6E8AD580C99636267800 /* Brand.swift in Sources */,
 				41EC64D475B0375844F31AE2 /* CheckView.swift in Sources */,
 				E53924D5EBCFBB61D227ECE9 /* Models.swift in Sources */,
 				7F288433D4F4F06091AC5723 /* ProviderDashboardView.swift in Sources */,
@@ -169,6 +188,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -254,6 +274,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
