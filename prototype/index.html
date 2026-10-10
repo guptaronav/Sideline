@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sideline Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700;1,800&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: control rail | device stage | outbox of texts and emails; one column on phones */
+:root{
+  --bg:#E8ECF0; --surface:#FFFFFF; --sunk:#F2F4F7; --ink:#14202B; --muted:#586674; --line:#C9D1D9;
+  --flag:#F4C20D; --flag-ink:#1B1600;
+  --stop:#B42318; --stop-bg:#FCEBE9; --stop-solid:#B42318;
+  --remove:#B9440F; --remove-bg:#FFF0E6;
+  --steady:#44546A; --steady-bg:#ECF0F4;
+  --signed:#1D4ED8; --signed-bg:#E8EFFF;
+  --on-solid:#FFFFFF; --device:#0E151C; --run-bg:#05080B; --run-ink:#D7DEE5;
+  --f-display:'Barlow Condensed','Arial Narrow',sans-serif;
+  --f-body:'Public Sans',-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-data:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --r-s:0.375rem; --r-m:0.75rem;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C131A; --surface:#15202A; --sunk:#1B2732; --ink:#E4EAF0; --muted:#96A5B3; --line:#2A3846;
+    --stop:#F2675C; --stop-bg:#3A1613; --remove:#F08A4B; --remove-bg:#3A2213;
+    --steady:#A9B6C4; --steady-bg:#212D39; --signed:#86A9FF; --signed-bg:#1A2647;
+    --device:#000000; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C131A; --surface:#15202A; --sunk:#1B2732; --ink:#E4EAF0; --muted:#96A5B3; --line:#2A3846;
+  --stop:#F2675C; --stop-bg:#3A1613; --remove:#F08A4B; --remove-bg:#3A2213;
+  --steady:#A9B6C4; --steady-bg:#212D39; --signed:#86A9FF; --signed-bg:#1A2647;
+  --device:#000000; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:0.9375rem;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--signed);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:0}
+.shell{display:grid;grid-template-columns:18rem minmax(0,1fr) 20rem;gap:1.5rem;padding-block:1.25rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:92rem;margin:0 auto;align-items:start}
+@media (max-width:74rem){.shell{grid-template-columns:17rem minmax(0,1fr)}.outbox{grid-column:1 / -1}}
+@media (max-width:46rem){.shell{grid-template-columns:minmax(0,1fr)}}
+
+.rail{display:flex;flex-direction:column;gap:1rem;min-width:0}
+.brand{display:flex;flex-direction:column;gap:0.25rem}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:2.25rem;letter-spacing:0.01em;line-height:1}
+.brand span{color:var(--muted);font-size:0.8125rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:0.875rem;display:flex;flex-direction:column;gap:0.625rem;min-width:0}
+.label{font-size:0.6875rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+.who{display:flex;flex-direction:column;gap:0.5rem}
+.who-group{display:flex;flex-direction:column;gap:0.25rem}
+.pbtn{display:flex;gap:0.625rem;align-items:center;text-align:left;background:transparent;border:1px solid transparent;border-radius:var(--r-s);padding:0.375rem 0.5rem}
+.pbtn:hover{background:var(--sunk)}
+.pbtn[aria-pressed="true"]{background:var(--sunk);border-color:var(--line)}
+.ini{flex:none;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:0.9375rem;background:var(--steady-bg);color:var(--steady)}
+.pbtn[aria-pressed="true"] .ini{background:var(--flag);color:var(--flag-ink)}
+.pbtn small{display:block;color:var(--muted);font-size:0.75rem;line-height:1.3}
+.days{display:flex;align-items:center;gap:0.5rem}
+.days button{flex:none;width:2.25rem;height:2.25rem;border-radius:var(--r-s);border:1px solid var(--line);background:var(--sunk);font-size:1rem}
+.days button:disabled{opacity:0.4;cursor:default}
+.days .dl{flex:1;text-align:center;min-width:0}
+.dl b{display:block;font-family:var(--f-display);font-size:1.375rem;font-weight:600;line-height:1.1}
+.dl small{color:var(--muted);font-size:0.75rem}
+.guide{background:var(--flag);color:var(--flag-ink);border-color:transparent}
+.guide .label{color:var(--flag-ink);opacity:0.75}
+.guide p{margin:0}
+.jumps{display:flex;flex-direction:column;gap:0.375rem}
+.jumps button{text-align:left;background:var(--sunk);border:1px solid var(--line);border-radius:var(--r-s);padding:0.4375rem 0.625rem;font-size:0.8125rem}
+.jumps button:hover{border-color:var(--muted)}
+.fine{font-size:0.75rem;color:var(--muted);margin:0}
+.toggle{display:flex;gap:0.5rem;align-items:center;font-size:0.8125rem}
+.chainline{font-family:var(--f-data);font-size:0.75rem;line-height:1.6}
+
+.stage{display:flex;flex-direction:column;align-items:center;gap:0.75rem;min-width:0}
+.stage-head{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}
+.stage-head h2{font-family:var(--f-display);font-weight:600;font-size:1.5rem}
+.stage-head span{color:var(--muted);font-size:0.8125rem}
+.device{width:min(100%,24rem);aspect-ratio:390/844;background:var(--device);border-radius:2.75rem;padding:0.75rem;position:relative;box-shadow:0 1.5rem 3rem -1.5rem rgba(0,0,0,0.45)}
+.screen{position:absolute;inset:0.75rem;border-radius:2.125rem;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+.notch{position:absolute;top:1.25rem;left:50%;transform:translateX(-50%);width:6.5rem;height:1.75rem;background:var(--device);border-radius:1rem;z-index:5}
+.sbar{display:flex;justify-content:space-between;padding:1.0625rem 1.75rem 0.25rem;font-size:0.8125rem;font-weight:600;flex:none}
+.appbar{flex:none;padding:0.5rem 1.125rem 0.625rem;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.appbar b{font-family:var(--f-display);font-size:1.375rem;font-weight:700;letter-spacing:0.01em}
+.appbar .ctx{font-size:0.75rem;color:var(--muted);text-align:right;line-height:1.25}
+.back{background:none;border:none;padding:0;font-weight:600;color:var(--signed);font-size:0.875rem}
+.sos{flex:none;background:var(--stop-solid);color:var(--on-solid);border:none;border-radius:1rem;padding:0.3125rem 0.75rem;font-weight:700;font-size:0.8125rem}
+.scroll{flex:1;overflow-y:auto;padding:1rem 1rem 1.25rem;display:flex;flex-direction:column;gap:0.875rem;min-height:0}
+.tabbar{flex:none;display:flex;border-top:1px solid var(--line);background:var(--surface);padding:0.375rem 0.5rem 1.25rem}
+.tabbar button{flex:1;background:none;border:none;padding:0.5rem 0.25rem;font-size:0.75rem;font-weight:600;color:var(--muted);border-radius:var(--r-s)}
+.tabbar button[aria-current="page"]{color:var(--ink);background:var(--sunk)}
+.cue{width:min(100%,24rem);font-size:0.8125rem;color:var(--muted);text-align:center;min-height:1.25rem}
+.cue b{color:var(--ink)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:0.875rem;display:flex;flex-direction:column;gap:0.5rem;min-width:0}
+.card h3{font-size:1rem;font-weight:700}
+.card p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:0.8125rem}
+.big-btn{display:block;width:100%;border:none;border-radius:var(--r-m);padding:0.9375rem 1rem;font-weight:700;font-size:1.0625rem;background:var(--flag);color:var(--flag-ink);text-align:center}
+.btn{display:block;width:100%;border:1px solid var(--line);border-radius:var(--r-m);padding:0.75rem 1rem;font-weight:600;background:var(--surface);text-align:center}
+.btn.solid-stop{background:var(--stop-solid);color:var(--on-solid);border-color:transparent}
+.btn.solid-remove{background:var(--remove);color:var(--on-solid);border-color:transparent}
+.btn.ink{background:var(--ink);color:var(--surface);border-color:transparent}
+.stack{display:flex;flex-direction:column;gap:0.5rem}
+.row{display:flex;align-items:center;gap:0.75rem;padding:0.6875rem 0.75rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);text-align:left;width:100%}
+.row .num{flex:none;width:2rem;font-family:var(--f-display);font-weight:700;font-size:1.25rem;color:var(--muted);text-align:center}
+.row .nm{flex:1;min-width:0;font-weight:600}
+.row .nm small{display:block;font-weight:400;color:var(--muted);font-size:0.75rem}
+.pill{flex:none;font-size:0.6875rem;font-weight:700;letter-spacing:0.02em;padding:0.1875rem 0.5rem;border-radius:1rem;background:var(--steady-bg);color:var(--steady);white-space:nowrap}
+.pill.remove{background:var(--remove-bg);color:var(--remove)}
+.pill.stop{background:var(--stop-bg);color:var(--stop)}
+.pill.signed{background:var(--signed-bg);color:var(--signed)}
+.banner{border-radius:var(--r-m);padding:0.75rem 0.875rem;font-size:0.875rem;background:var(--steady-bg);color:var(--ink);border-left:4px solid var(--steady)}
+.banner.remove{background:var(--remove-bg);border-left-color:var(--remove)}
+.banner.stop{background:var(--stop-bg);border-left-color:var(--stop)}
+.banner.signed{background:var(--signed-bg);border-left-color:var(--signed)}
+.chips{display:flex;gap:0.375rem;flex-wrap:wrap}
+.sample{align-self:flex-start;font-family:var(--f-data);font-size:0.6875rem;padding:0.125rem 0.375rem;border:1px dashed var(--muted);border-radius:var(--r-s);color:var(--muted)}
+.code{font-family:var(--f-data);font-size:0.6875rem;color:var(--muted);white-space:nowrap}
+p.code{white-space:normal;overflow-wrap:anywhere}
+ol.plain,ul.plain{margin:0;padding-left:1.125rem;display:flex;flex-direction:column;gap:0.375rem}
+.hero-result{border-radius:var(--r-m);padding:1.125rem;display:flex;flex-direction:column;gap:0.5rem}
+.hero-result h2{font-family:var(--f-display);font-size:2rem;font-weight:700;line-height:1.05}
+.hero-result.stop{background:var(--stop-solid);color:var(--on-solid)}
+.hero-result.remove{background:var(--remove);color:var(--on-solid)}
+.hero-result.steady{background:var(--steady-bg);color:var(--ink);border:1px solid var(--line)}
+.hero-result.fail{background:var(--sunk);color:var(--ink);border:1px dashed var(--muted)}
+.hero-result .label{color:inherit;opacity:0.8}
+.bignum{font-family:var(--f-display);font-size:3.5rem;font-weight:700;line-height:1;letter-spacing:0.02em}
+.prob{display:flex;align-items:baseline;gap:0.5rem;flex-wrap:wrap}
+.prob b{font-family:var(--f-display);font-size:2rem;font-weight:700;line-height:1}
+table.m{width:100%;border-collapse:collapse;font-size:0.8125rem}
+table.m th{font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);text-align:left;font-weight:700;padding:0.25rem 0.375rem;border-bottom:1px solid var(--line);white-space:nowrap}
+table.m td{padding:0.4375rem 0.375rem;border-bottom:1px solid var(--line);vertical-align:top}
+table.m td.n{font-family:var(--f-data);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.out{color:var(--remove);font-weight:600}
+td.na{color:var(--muted);font-style:italic}
+.tw{overflow-x:auto;min-width:0}
+details summary{cursor:pointer;font-weight:600;font-size:0.875rem}
+.ladder{display:flex;flex-direction:column;gap:0.25rem}
+.step{display:flex;gap:0.625rem;align-items:flex-start;padding:0.5rem 0.625rem;border-radius:var(--r-s);border:1px solid var(--line);background:var(--surface)}
+.step .sn{flex:none;width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:0.875rem;background:var(--sunk);color:var(--muted)}
+.step.done .sn{background:var(--steady);color:var(--surface)}
+.step.now{border-color:var(--ink);border-width:2px}
+.step.now .sn{background:var(--flag);color:var(--flag-ink)}
+.step.locked{opacity:0.6}
+.step b{display:block;font-size:0.875rem}
+.step small{color:var(--muted);font-size:0.75rem;display:block}
+.chart{width:100%;height:auto;display:block}
+.chart .bar{fill:var(--steady)}
+.chart .bar.hi{fill:var(--remove)}
+.chart .bar.lo{fill:var(--line)}
+.chart .axis{stroke:var(--line);stroke-width:1}
+.chart .thr{stroke:var(--remove);stroke-width:1;stroke-dasharray:4 3}
+.chart .base{stroke:var(--signed);stroke-width:1;stroke-dasharray:2 3}
+.chart text{fill:var(--muted);font-family:var(--f-data);font-size:9px}
+.chart .line{fill:none;stroke:var(--ink);stroke-width:2}
+.chart .pt{fill:var(--ink)}
+.check-list label{display:flex;gap:0.5rem;align-items:center;font-size:0.875rem;padding-block:0.25rem}
+.chain{display:flex;flex-direction:column;gap:0.375rem}
+.chain .lnk{display:grid;grid-template-columns:2.75rem 1fr;gap:0.5rem;font-size:0.8125rem;align-items:baseline}
+.chain .lnk span:first-child{font-family:var(--f-data);font-size:0.6875rem;font-weight:500;color:var(--muted)}
+
+.runbox{position:relative;flex:1;background:var(--run-bg);color:var(--run-ink);overflow:hidden;display:flex;flex-direction:column}
+.run-top{position:relative;z-index:2;padding:1.25rem 1.25rem 0;display:flex;justify-content:space-between;align-items:center;font-size:0.8125rem;gap:0.5rem}
+.run-top b{font-family:var(--f-display);font-size:1.25rem;font-weight:600;letter-spacing:0.02em}
+.flash{position:absolute;inset:0;background:#FFFFFF;opacity:0;z-index:1}
+.dot{position:absolute;width:1.125rem;height:1.125rem;border-radius:50%;background:var(--flag);top:50%;left:50%;transform:translate(-50%,-50%);z-index:2}
+.opt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--f-display);font-weight:700;font-size:3rem;z-index:2;color:var(--run-ink)}
+.run-bot{position:absolute;left:1.25rem;right:1.25rem;bottom:1.5rem;z-index:2;display:flex;flex-direction:column;gap:0.5rem}
+.track{height:0.375rem;background:rgba(255,255,255,0.18);border-radius:1rem;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--flag)}
+.run-bot .rb{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;font-size:0.75rem}
+.skip{background:transparent;border:1px solid rgba(255,255,255,0.35);color:var(--run-ink);border-radius:var(--r-s);padding:0.25rem 0.625rem;font-size:0.75rem}
+.run-sos{position:absolute;top:3.25rem;right:1.25rem;z-index:3}
+
+.browser{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;box-shadow:0 1.25rem 2.5rem -1.75rem rgba(0,0,0,0.4)}
+.bchrome{display:flex;gap:0.75rem;align-items:center;padding:0.5rem 0.75rem;background:var(--sunk);border-bottom:1px solid var(--line)}
+.lights{display:flex;gap:0.375rem}.lights i{width:0.625rem;height:0.625rem;border-radius:50%;background:var(--line)}
+.url{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:1rem;padding:0.25rem 0.75rem;font-family:var(--f-data);font-size:0.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bbody{padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
+.bbody h1{font-family:var(--f-display);font-weight:700;font-size:1.75rem;line-height:1.1}
+.bbody h2{font-size:1rem;font-weight:700}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:0.75rem}
+.form{display:grid;gap:0.75rem;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.field{display:flex;flex-direction:column;gap:0.25rem;font-size:0.8125rem;font-weight:600}
+.field input,.field select{font:inherit;font-weight:400;padding:0.5rem 0.625rem;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface);color:var(--ink)}
+.radios{display:flex;flex-direction:column;gap:0.375rem;font-size:0.875rem}
+.radios label{display:flex;gap:0.5rem;align-items:flex-start}
+.err{color:var(--stop);font-size:0.8125rem;font-weight:600}
+table.cases{width:100%;border-collapse:collapse;font-size:0.875rem}
+table.cases th{text-align:left;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);padding:0.375rem 0.5rem;border-bottom:1px solid var(--line)}
+table.cases td{padding:0.625rem 0.5rem;border-bottom:1px solid var(--line);vertical-align:middle}
+.linkbtn{background:none;border:none;color:var(--signed);font-weight:600;padding:0}
+
+.outbox{display:flex;flex-direction:column;gap:0.75rem;min-width:0}
+.outbox h2{font-family:var(--f-display);font-weight:600;font-size:1.375rem}
+.msg{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:0.75rem;display:flex;flex-direction:column;gap:0.375rem;font-size:0.8125rem}
+.msg header{display:flex;justify-content:space-between;gap:0.5rem;align-items:baseline}
+.msg .ch{font-family:var(--f-data);font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted)}
+.msg .to{font-weight:600}
+.msg p{margin:0;white-space:pre-line}
+.device.tablet{width:100%;max-width:60rem;aspect-ratio:4/3;border-radius:1.75rem;padding:0.875rem}
+.device.tablet .screen{inset:0.875rem;border-radius:1rem}
+.device.tablet .sbar{padding:0.5rem 1.25rem 0.25rem}
+.device.tablet .scroll{padding:1.25rem 1.5rem}
+.device.tablet .bbody{padding:0}
+.ipadbar{flex:none;display:flex;gap:0.75rem;align-items:center;padding:0.375rem 1rem 0.625rem;background:var(--sunk);border-bottom:1px solid var(--line)}
+.mbar{display:none}
+@media (max-width:46rem){
+  .rail{order:2}.stage{order:1}.outbox{order:3}
+  .mbar{display:flex;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;width:100%;gap:0.5rem;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:0.5rem}
+  .mbar select{flex:1;min-width:0;font:inherit;padding:0.375rem;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface);color:var(--ink)}
+  .mbar button{flex:none;width:2.25rem;height:2.25rem;border:1px solid var(--line);border-radius:var(--r-s);background:var(--sunk)}
+  .mbar button:disabled{opacity:0.4}
+  .mbar .md{flex:none;min-width:3.75rem;text-align:center;font-size:0.8125rem;font-weight:600}
+  .stage-head{display:none}
+  .device,.device.tablet{width:100%;max-width:none;aspect-ratio:auto;height:calc(100dvh - 5.5rem - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));padding:0;border-radius:var(--r-m);background:transparent;box-shadow:none;border:1px solid var(--line);overflow:hidden}
+  .device .screen,.device.tablet .screen{position:relative;inset:auto;height:100%;border-radius:0}
+  .notch,.sbar{display:none}
+  .cue{width:100%}
+}
+/* Sports B2C look for the iPhone apps: dark field, team colors, scoreboard type */
+.device:not(.tablet) .screen{
+  --bg:#090D18; --surface:#131A2C; --sunk:#1B2440; --ink:#F3F6FF; --muted:#9AA7CC; --line:#26314F;
+  --stop:#FF5468; --stop-bg:#3B1422; --stop-solid:#E8263E;
+  --remove:#FF7A1F; --remove-bg:#3A2111; --steady:#C2CBEA; --steady-bg:#222B47;
+  --signed:#5C8DFF; --signed-bg:#1A2550; color-scheme:dark; color:var(--ink);
+}
+.screen{--team1:#3B5BFF;--team2:#22D3EE}
+.screen[data-team="dana"]{--team1:#7C3AED;--team2:#FFC93C}
+.screen[data-team="marcus"]{--team1:#1D5BFF;--team2:#3EE6FF}
+.appbar b,.brand b{font-style:italic;font-weight:800}
+.hero-result h2,.bignum,.prob b{font-style:italic;font-weight:800}
+.hero-result h2{text-transform:uppercase}
+.big-btn{background:linear-gradient(135deg,#FFE45C,#FFB800);box-shadow:0 0.5rem 1.5rem -0.5rem rgba(255,190,0,0.55);font-family:var(--f-display);font-size:1.375rem;font-weight:800;font-style:italic;letter-spacing:0.02em;text-transform:uppercase}
+.row .num{width:2.5rem;height:2.5rem;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--team1),color-mix(in srgb,var(--team1) 55%,#000));color:#FFFFFF;font-style:italic;font-weight:800;font-size:1.125rem}
+.card{border-radius:1rem}
+.hero{position:relative;overflow:hidden;border-radius:1.125rem;padding:1.125rem;color:#FFFFFF;isolation:isolate;display:flex;flex-direction:column;gap:0.625rem;
+  background:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--team2) 45%,transparent),transparent 60%),linear-gradient(140deg,var(--team1),color-mix(in srgb,var(--team1) 45%,#05070D))}
+.hero .label{color:rgba(255,255,255,0.8)}
+.hero h2{font-family:var(--f-display);font-style:italic;font-weight:800;font-size:2.25rem;line-height:0.95;text-transform:uppercase;letter-spacing:0.01em}
+.hero p{margin:0;color:rgba(255,255,255,0.85)}
+.jersey{position:absolute;right:-0.5rem;bottom:-2.25rem;font-family:var(--f-display);font-style:italic;font-weight:800;font-size:9rem;line-height:1;color:rgba(255,255,255,0.1);z-index:-1;pointer-events:none}
+.hero-row{display:flex;align-items:center;gap:0.875rem}
+.hero-step{font-family:var(--f-display);font-style:italic;font-weight:800;font-size:1.375rem;text-transform:uppercase;line-height:1.05}
+.hero-stats{display:flex;gap:1.5rem}
+.hero-stats b{display:block;font-family:var(--f-display);font-style:italic;font-weight:800;font-size:1.75rem;line-height:1}
+.hero-stats span{font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.75)}
+.ring{flex:none;width:6.5rem;height:6.5rem}
+.ring-bg{fill:none;stroke:rgba(255,255,255,0.16);stroke-width:9}
+.ring-fg{fill:none;stroke:var(--team2);stroke-width:9;stroke-linecap:round}
+.ring-n{fill:#FFFFFF;font-family:var(--f-display);font-style:italic;font-weight:800;font-size:34px;text-anchor:middle}
+.ring-l{fill:rgba(255,255,255,0.75);font-family:var(--f-body);font-size:10px;text-anchor:middle}
+.streak{display:flex;gap:0.3125rem;flex-wrap:wrap;align-items:center}
+.streak .sd{width:0.875rem;height:0.875rem;border-radius:50%;background:rgba(255,255,255,0.18)}
+.streak .sd.hi{background:#FF7A1F}.streak .sd.mid{background:#FFD23F}.streak .sd.clean{background:var(--team2)}
+.streak-key{display:flex;gap:0.75rem;flex-wrap:wrap;font-size:0.6875rem;color:rgba(255,255,255,0.75)}
+.streak-key i{display:inline-block;width:0.5rem;height:0.5rem;border-radius:50%;margin-right:0.25rem;vertical-align:middle}
+.tabbar button{display:flex;flex-direction:column;align-items:center;gap:0.1875rem}
+.tabbar svg{width:1.375rem;height:1.375rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.device:not(.tablet) .tabbar button[aria-current="page"]{color:var(--team2);background:transparent}
+.guide{background:linear-gradient(135deg,#FFE45C,#FFB800)}
+.av{flex:none;display:block;width:2.5rem;height:2.5rem}
+.av-md{width:3.5rem;height:3.5rem}
+.av-lg{width:4.75rem;height:4.75rem}
+.pbtn .av{width:2rem;height:2rem}
+.hero-id{display:flex;align-items:center;gap:0.75rem}
+.appbar .ctx{margin-left:auto}
+.acct{flex:none;background:none;border:none;padding:0;border-radius:50%;display:grid;place-items:center}
+.acct .av,.acct .ini{width:2rem;height:2rem}
+.ipadbar .acct{margin-left:0.25rem}
+.btn.apple{background:#FFFFFF;color:#000000;border-color:transparent}
+.screen[data-team="brand"]{--team1:#3B5BFF;--team2:#FFC93C}
+.av-strip{display:flex;padding-left:0.375rem}
+.av-strip .av{width:1.875rem;height:1.875rem;margin-left:-0.375rem}
+.scroll > *{flex-shrink:0}
+.device:not(.tablet) .hero-result.remove{background:linear-gradient(135deg,#E8590C,#A8360A)}
+.toast{position:fixed;left:50%;bottom:calc(1.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:0.625rem 1rem;border-radius:var(--r-m);font-size:0.875rem;z-index:50;max-width:calc(100% - 2rem)}
+</style>
+
+<style>
+html,body{margin:0}
+.rail .brand{display:none}
+.scroll > *{flex-shrink:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+.topnav{display:flex;align-items:center;gap:1.25rem;padding-block:0.75rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.topnav b{font-family:var(--f-display);font-weight:700;font-size:1.5rem;letter-spacing:0.01em}
+.topnav nav{display:flex;gap:0.25rem}
+.topnav a{text-decoration:none;color:var(--muted);font-weight:600;font-size:0.875rem;padding:0.375rem 0.75rem;border-radius:var(--r-s)}
+.topnav a[aria-current="page"]{color:var(--ink);background:var(--sunk)}
+.topnav span{margin-left:auto;font-size:0.75rem;color:var(--muted)}
+.spec{display:grid;grid-template-columns:14rem minmax(0,1fr);gap:2.5rem;max-width:76rem;margin:0 auto;padding-block:2rem 4rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (max-width:52rem){.spec{grid-template-columns:minmax(0,1fr)}.spec-toc{display:none}}
+.spec-toc{position:sticky;top:1rem;align-self:start;display:flex;flex-direction:column;gap:0.25rem;font-size:0.8125rem}
+.spec-toc a{color:var(--muted);text-decoration:none;padding:0.25rem 0.5rem;border-radius:var(--r-s)}
+.spec-toc a:hover{color:var(--ink);background:var(--sunk)}
+.spec-body{min-width:0;max-width:52rem;line-height:1.6}
+.spec-body h1{font-family:var(--f-display);font-size:2.75rem;line-height:1.05;margin:0 0 1rem}
+.spec-body h2{font-family:var(--f-display);font-size:1.875rem;font-weight:700;margin:2.75rem 0 0.75rem;padding-top:1rem;border-top:1px solid var(--line)}
+.spec-body h3{font-size:1.0625rem;font-weight:700;margin:1.75rem 0 0.5rem}
+.spec-body p,.spec-body ul,.spec-body ol{margin:0 0 0.875rem}
+.spec-body li{margin-bottom:0.375rem}
+.spec-body code{font-family:var(--f-data);font-size:0.8125rem;background:var(--sunk);padding:0.0625rem 0.3125rem;border-radius:0.25rem}
+.spec-body a{color:var(--signed)}
+.jwrap{padding-block:2rem 4rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:96rem;margin:0 auto;display:flex;flex-direction:column;gap:2.5rem}
+.jhead h1{font-family:var(--f-display);font-style:italic;font-weight:800;font-size:2.75rem;line-height:1;text-transform:uppercase;margin:0 0 0.5rem}
+.jhead p{margin:0;max-width:48rem;color:var(--muted)}
+.journey{display:flex;flex-direction:column;gap:1rem}
+.jtitle{display:flex;gap:1rem;align-items:center}
+.jtitle h2{font-family:var(--f-display);font-style:italic;font-weight:800;font-size:1.875rem;text-transform:uppercase;margin:0}
+.jtitle p{margin:0.25rem 0 0;color:var(--muted);font-size:0.875rem;max-width:52rem}
+.jfaces{display:flex;flex:none}
+.jfaces > *{margin-right:-0.5rem}
+.jini{width:3.5rem;height:3.5rem;font-size:1.125rem}
+.jscroll{overflow-x:auto;padding-bottom:0.75rem}
+.jinner{display:flex;flex-direction:column;gap:0.25rem;width:max-content}
+.jcurve{height:5.5rem;display:block}
+.jline{fill:none;stroke:var(--signed);stroke-width:0.12}
+.jdot{stroke:var(--surface);stroke-width:0.12}
+.jdot.f1{fill:#E8263E}.jdot.f2{fill:#FF7A1F}.jdot.f3{fill:#F4C20D}.jdot.f4{fill:#3EA6FF}.jdot.f5{fill:#7C3AED}
+.jlab{font-family:var(--f-body);font-size:0.55px;fill:var(--muted);text-anchor:middle}
+.jcols{display:flex;gap:0.75rem}
+.jcard{width:16rem;flex:none;background:var(--surface);border:1px solid var(--line);border-radius:1rem;padding:1rem;display:flex;flex-direction:column;gap:0.5rem;position:relative}
+.jnum{position:absolute;top:0.75rem;right:0.875rem;font-family:var(--f-display);font-style:italic;font-weight:800;font-size:2rem;line-height:1;color:var(--line)}
+.jcard h3{font-family:var(--f-display);font-style:italic;font-weight:800;font-size:1.375rem;text-transform:uppercase;line-height:1.05;margin:0;padding-right:2rem}
+.jmoment{margin:0;font-size:0.875rem;font-weight:600}
+.jcard dl{margin:0;display:flex;flex-direction:column;gap:0.25rem;font-size:0.8125rem;line-height:1.45}
+.jcard dt{font-size:0.6875rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-top:0.375rem}
+.jcard dd{margin:0}
+.jgo{margin-top:auto;align-self:flex-start;background:var(--ink);color:var(--surface);border:none;border-radius:2rem;padding:0.4375rem 0.875rem;font-weight:600;font-size:0.8125rem}
+table.spec-t{width:100%;border-collapse:collapse;font-size:0.8125rem;margin:0 0 1rem}
+table.spec-t th{text-align:left;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);padding:0.375rem 0.5rem;border-bottom:1px solid var(--line);vertical-align:bottom}
+table.spec-t td{padding:0.5rem;border-bottom:1px solid var(--line);vertical-align:top}
+</style>
+</head>
+<body>
+<header class="topnav"><b>Sideline</b><nav aria-label="Views"><a href="#demo" data-view="demo">Demo</a><a href="#journeys" data-view="journeys">Journeys</a><a href="#design" data-view="design">Design spec</a></nav><span>Built on the OculoDx knowledge graph · demo data only</span></header>
+<div id="view-demo">
+<div class="shell">
+  <aside class="rail" id="rail"></aside>
+  <main class="stage" id="stage"></main>
+  <aside class="outbox" id="outbox"></aside>
+</div>
+<div class="toast" id="toast" hidden></div>
+</div>
+<div id="view-journeys" class="jwrap" hidden><div id="journeys"></div></div>
+<div id="view-design" class="spec" hidden><nav class="spec-toc" aria-label="Contents"><span class="label">Contents</span><a href="#1-intent">1. Intent</a><a href="#2-users">2. Users</a><a href="#3-personas">3. Personas</a><a href="#4-grounding-facts-the-design-depends-on">4. Grounding facts the design depends on</a><a href="#5-what-oculodx-can-do-today">5. What OculoDx can do today</a><a href="#6-user-journeys">6. User journeys</a><a href="#7-screens">7. Screens</a><a href="#8-prototype-plan">8. Prototype plan</a><a href="#9-open-items">9. Open items</a></nav><article class="spec-body"><h1 id="sideline-personas-user-journeys-and-screens">Sideline: personas, user journeys, and screens</h1>
+<p>Status: draft, 2026-10-25. The working demo is the Demo tab of <code>prototype/index.html</code>. It is the design reference for the Flutter build.</p>
+<h2 id="1-intent">1. Intent</h2>
+<p>Sideline helps coaches, players, and clinicians spot a possible sports concussion early and manage recovery, using eye-movement and pupil measurements from an iPhone's front camera, run through the OculoDx knowledge graph and its concussion model.</p>
+<p>It does three things:</p>
+<ol><li><strong>Flag.</strong> After a hit, a 2-minute check runs the graph's tests and model. If the result is off, the app gives one instruction: remove from play and get evaluated. If pupils are unequal by more than 1 mm, it says call 911.</li><li><strong>Track.</strong> During recovery, the player runs one check a day. The measurements move them through the graduated return-to-learn and return-to-sport steps.</li><li><strong>Hand off.</strong> After two clean checks in a row, a licensed clinician gets the report, makes the clearance decision on iPad, and the app records it.</li></ol>
+<h3 id="hard-lines">Hard lines</h3>
+<ul><li>Sideline never diagnoses a concussion and never clears a player. A "no change detected" result never reads as "safe to play".</li><li>Results come from catalog thresholds and the model. The player's baseline is shown alongside for context.</li><li>Emergency signs always outrank everything else on screen.</li><li><strong>Measurements decide, not answers.</strong> Every result comes from the OculoDx knowledge graph: sensors, tests, observations, computers, features, biomarkers, then the model. No decision uses what the player says, because players under-report to keep playing. The coach is never asked to judge a concussion.</li><li><strong>A consumer sports app, not a business tool.</strong> Coach and player apps are bold and colorful: a dark field background, each school's team colors, italic scoreboard type, jersey-number badges, a "comeback plan" step ring, and a trail of daily check results. Safety states keep fixed meanings across teams: red for 911, orange for remove from play, and no green "all clear". The wording stays exact even where the look is energetic. Nothing celebrates a result the clinician hasn't signed off.</li><li>Clinician iPad views use the same brand on a lighter, calmer layout.</li></ul>
+<h3 id="non-goals-for-v1">Non-goals for v1</h3>
+<ul><li>Club, youth (under 13), college, and professional sport. US high school only.</li><li>Android. The checks need the iPhone TrueDepth front camera.</li><li>Severe TBI monitoring in EMS or ICU settings (the <code>severe-tbi-plr</code> condition). The pupil measurements overlap, but the setting, users, and stakes are different.</li><li>Replacing the clinician's own exam, SCAT6, or imaging.</li></ul>
+<h2 id="2-users">2. Users</h2>
+<p>Three user groups, two personas each. Parents/guardians and athletic directors receive notifications and records but do not use the app.</p>
+<div class="tw"><table class="spec-t"><thead><tr><th>Group</th><th>Persona</th><th>Role in the app</th></tr></thead><tbody><tr><td>Coach</td><td>Dana, volunteer head coach, no athletic trainer</td><td>Runs sideline checks, logs removals</td></tr><tr><td>Coach</td><td>Marcus, certified athletic trainer</td><td>Runs baselines and checks for a whole school, manages recovery</td></tr><tr><td>Player</td><td>Jalen, varsity player who hides symptoms</td><td>Records baseline, is checked, does daily recovery checks</td></tr><tr><td>Player</td><td>Priya, player with a second concussion, slow recovery</td><td>Daily checks, symptom log, return to school</td></tr><tr><td>Clinician</td><td>Dr. Ruiz, primary-care pediatrician</td><td>Reviews report, makes and signs the clearance decision</td></tr><tr><td>Clinician</td><td>Dr. Okafor, sports medicine clinic</td><td>Oversees many schools, runs in-clinic checks, manages cases</td></tr></tbody></table></div>
+<h2 id="3-personas">3. Personas</h2>
+<h3 id="dana-whitfield-volunteer-head-coach-primary-persona">Dana Whitfield, volunteer head coach (primary persona)</h3>
+<ul><li><strong>Who:</strong> 41, history teacher, head coach of girls' varsity soccer at a 600-student rural public high school. She/her.</li><li><strong>Setting:</strong> The school has no athletic trainer, like about 31% of US public high schools (<a href="https://ryortho.com/2019/12/one-in-three-u-s-high-schools-do-not-have-athletic-trainer/" target="_blank" rel="noopener">ATLAS census</a>). At away games she is often the only adult on the bench. Fields have weak cell signal.</li><li><strong>Device:</strong> Her own iPhone. Has never used a medical app.</li><li><strong>Goals:</strong> Never miss an injured player. Never be the person who decides a player is fine. Show she followed state law if anyone asks.</li><li><strong>Fears:</strong> A player gets hurt worse because she missed it. An angry parent when she pulls a starter in a playoff game. Being blamed for a wrong reading.</li><li><strong>What she needs from Sideline:</strong> One clear instruction she can act on in seconds. Works with no signal. A record she can show the athletic director. Red flags she cannot miss.</li><li><strong>What failure looks like for her:</strong> The app gives a reassuring result, she sends the player back in, and the player is hurt again. Or the app is so fiddly she stops using it by week three.</li></ul>
+<h3 id="marcus-bell-certified-athletic-trainer">Marcus Bell, certified athletic trainer</h3>
+<ul><li><strong>Who:</strong> 33, ATC, the only full-time athletic trainer at a 1,600-student suburban high school with about 400 athletes across 12 fall teams. He/him.</li><li><strong>Setting:</strong> On game nights he covers football while soccer plays on the far field. He relies on coaches to send him players. Already keeps records in an athletic training EMR.</li><li><strong>Goals:</strong> Baseline every athlete before the first game without losing a week to it. Objective data he can hand to physicians. A defensible log. Know the status of every injured athlete at a glance.</li><li><strong>Fears:</strong> A coach on another field misses a hit. Phone data that is too noisy to trust. Another system that does not talk to his EMR.</li><li><strong>What he needs:</strong> Bulk baseline sessions (a whole team in one room). A roster view across all teams. Data quality indicators on every reading. Export. The ability to manage return-to-sport stages where his state allows athletic trainers to do so.</li><li><strong>What failure looks like for him:</strong> Baselines of bad quality that make every later comparison meaningless, or duplicate data entry.</li></ul>
+<h3 id="jalen-brooks-player-who-hides-symptoms">Jalen Brooks, player who hides symptoms</h3>
+<ul><li><strong>Who:</strong> 17, junior running back, being recruited by two colleges. He/him.</li><li><strong>Setting:</strong> Uses his own iPhone. His parents are supportive but not technical.</li><li><strong>Goals:</strong> Play every snap. Keep his recruiting film going.</li><li><strong>Behavior that matters:</strong> Would not report a headache in a big game. Might try to do badly on his baseline so a later check looks normal, a known problem with baseline testing called sandbagging. Wants to rush through recovery steps.</li><li><strong>What he needs:</strong> A check that is quick and fair, and results explained without talking down to him. In recovery, a clear view of what stage he is on and why he cannot skip ahead.</li><li><strong>What the design must protect against:</strong> Sandbagged baselines (quality checks on baseline capture). Under-reported symptoms (the check does not depend on what he says). Gaming daily checks (checks must be his face, with capture quality recorded).</li><li><strong>What failure looks like:</strong> He returns to contact too soon. Or he sees the app as the enemy and finds ways around it.</li></ul>
+<h3 id="priya-nair-player-with-a-slow-recovery">Priya Nair, player with a slow recovery</h3>
+<ul><li><strong>Who:</strong> 15, sophomore midfielder, second concussion in two years. She/her.</li><li><strong>Setting:</strong> Her mother is closely involved and anxious. Priya is struggling with schoolwork since the injury.</li><li><strong>Goals:</strong> Understand what is happening to her. Get back to class first, then to soccer. See that she is improving.</li><li><strong>Fears:</strong> Permanent damage. Falling behind at school. Being pushed back too early.</li><li><strong>What she needs:</strong> Plain, calm explanations. A daily symptom check-in that takes a minute. Return-to-learn steps alongside return-to-sport steps. Progress shown as distance from her own baseline, with honest wording when it stalls.</li><li><strong>What failure looks like:</strong> Alarming language makes her anxiety worse, or the app shows only sport steps and ignores school.</li><li><strong>Note:</strong> She is a minor. Her parent gives consent and receives notifications.</li></ul>
+<h3 id="dr-elena-ruiz-primary-care-pediatrician">Dr. Elena Ruiz, primary-care pediatrician</h3>
+<ul><li><strong>Who:</strong> Pediatrician at a community practice. Sees a few concussions a month, mostly families walking in with a clearance form from the school. She/her.</li><li><strong>Setting:</strong> 15-minute visits. Not a concussion specialist. Does not want another app installed.</li><li><strong>Goals:</strong> Make a sound clearance decision quickly. Meet her state's written-clearance requirement.</li><li><strong>Fears:</strong> Clearing a child too early. Data she does not understand being presented as more certain than it is.</li><li><strong>What she needs:</strong> A one-page report she can read in two minutes: baseline vs. today for each measure, data quality, symptom trend, the return-to-sport stage history, and a plain statement of what the measurements are and their limits. Opens from a secure link in a browser. Sign-off in two taps with her credentials recorded.</li><li><strong>What failure looks like:</strong> A report that looks like a diagnosis, or one she has to call the school to interpret.</li></ul>
+<h3 id="dr-tom-okafor-sports-medicine-physician">Dr. Tom Okafor, sports medicine physician</h3>
+<ul><li><strong>Who:</strong> Leads a sports medicine clinic contracted to six high schools. Works with athletic trainers and physical therapists. In season, 20 or more concussion cases a week. He/him.</li><li><strong>Setting:</strong> Already owns clinic-grade tools. Runs preseason physicals, where baselines could be captured.</li><li><strong>Goals:</strong> See every open case across his schools. Triage who needs an in-person visit. Run checks in clinic. Assign return-to-sport stages remotely. Sign off in batches.</li><li><strong>Fears:</strong> Alert fatigue. Phone data of unknown accuracy driving decisions.</li><li><strong>What he needs:</strong> A multi-school case list. Raw measurements with quality indicators, not just green and red. In-clinic check mode on a clinic iPhone. Stage assignment. Export to his EMR.</li><li><strong>What failure looks like:</strong> A dashboard full of flags he cannot trust, so he ignores it.</li></ul>
+<h2 id="4-grounding-facts-the-design-depends-on">4. Grounding facts the design depends on</h2>
+<p>Sources are listed so each claim can be checked. "Secondary" means taken from a summary, not the primary text.</p>
+<p><strong>Law and protocol</strong></p>
+<ul><li>All 50 states and DC have a youth sports concussion law. The common elements are annual education with a signed information sheet, removal from play when a concussion is suspected, and written clearance by a licensed provider before return (<a href="https://lawfilesext.leg.wa.gov/biennium/2009-10/Htm/Bill%20Reports/House/1824.E%20HBR%20APH%2009.htm" target="_blank" rel="noopener">WA Lystedt law summary</a>, secondary).</li><li>Who may clear varies by state. Some states require a physician; others also allow NPs, PAs, or athletic trainers, sometimes under physician supervision (<a href="https://www.networkforphl.org/wp-content/uploads/2019/11/Summary-of-State-Laws-Addressing-Concussions-in-Youth-Sports-5-28-19.pdf" target="_blank" rel="noopener">Network for Public Health Law summary</a>, secondary). <strong>The app must treat the allowed clearing credential as a per-state setting.</strong> A full state table is still to be built.</li><li>Return to sport (Amsterdam 2022, secondary summary): 1 symptom-limited activity, 2 aerobic exercise (light, then moderate), 3 individual sport-specific exercise, 4 non-contact training, 5 full-contact practice, 6 return to sport. At least 24 hours per step (<a href="https://cdc.gov/heads-up/guidelines/returning-to-sports.html" target="_blank" rel="noopener">CDC</a>). Step back if symptoms return.</li><li>Return to learn: 1 relative rest for 24 to 48 hours, 2 school-type activities at home, 3 part-time school, 4 full-time school. Return to learn should be complete before return-to-sport steps 4 to 6 (secondary summary).</li><li>The exact point in the Amsterdam sequence where written clearance is required is not verified. <strong>My call for the design: clearance is required before step 5 (full contact), and state law can require it earlier.</strong></li></ul>
+<p><strong>Emergency signs</strong> (<a href="https://www.cdc.gov/heads-up/signs-symptoms/index.html" target="_blank" rel="noopener">CDC HEADS UP</a>): seizures; cannot recognize people or places; repeated vomiting; unusual behavior, increasing confusion or agitation; loss of consciousness, increasing drowsiness, or cannot be woken; slurred speech, weakness, numbness, or poor coordination; a headache that gets worse and does not go away; <strong>one pupil larger than the other</strong>, or double vision.</p>
+<p><strong>Regulation and privacy</strong></p>
+<ul><li>EyeBOX, a clinic eye-tracking device, was granted FDA De Novo in 2018 under product code QEA, 21 CFR 882.1455, "brain injury adjunctive interpretive oculomotor assessment aid" (<a href="https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfPMN/denovo.cfm?ID=DEN170091" target="_blank" rel="noopener">FDA</a>). Sideline flags possible concussion from eye signals for lay users, so it is very likely a regulated device, whatever the "never diagnoses" wording says. Screen copy in the prototype is written as if it will be reviewed by FDA.</li><li>Records a public school holds fall under FERPA; records a clinic holds fall under HIPAA (<a href="https://studentprivacy.ed.gov/resources/joint-guidance-application-ferpa-and-hipaa-student-health-records" target="_blank" rel="noopener">ED/HHS joint guidance</a>). The design keeps school-side and clinic-side data roles distinct.</li></ul>
+<p><strong>Scale of the problem</strong></p>
+<ul><li>About 40 to 50% of high school concussions go unreported, supported by several studies (secondary).</li><li>The "1.6 to 3.8 million a year" figure counts sports and recreation traumatic brain injuries, not only concussions. Pitch copy should say that.</li></ul>
+<h2 id="5-what-oculodx-can-do-today">5. What OculoDx can do today</h2>
+<p>Checked against the iOS code in <code>apps/sensors-testing/OculoSense</code> on 2026-10-25.</p>
+<div class="tw"><table class="spec-t"><thead><tr><th>Test</th><th>Duration</th><th>Measures</th><th>State</th></tr></thead><tbody><tr><td>Light Response</td><td>15 s, three screen flashes</td><td>Pupil light reflex (amplitude, latency), pupil asymmetry</td><td>Works. Noise floor about 0.15 to 0.3 mm.</td></tr><tr><td>Follow the Dot</td><td>75 s</td><td>Smooth pursuit gain, a rough saccade velocity, fixation stability</td><td>Works. Saccade velocity is crude; there is no step-target stimulus.</td></tr><tr><td>Hold &amp; Look</td><td>30 s</td><td>Blink rate, fixation stability, pupil asymmetry</td><td>Works.</td></tr><tr><td>DVA/GST (head-turn)</td><td>about 60 s</td><td>Gaze stabilization</td><td>Test screen works. The gaze-stabilization measurement itself is not built.</td></tr></tbody></table></div>
+<p>Not built yet, and needed by Sideline:</p>
+<ul><li><strong>Per-player baseline comparison.</strong> Every threshold in the code and catalog today is a population norm.</li><li><strong>A concussion model on the phone.</strong> The catalog model <code>concussion-oculomotor-screen-v1</code> is planned and unvalidated, uses population cut-offs, and ignores the pupil measures the condition lists as required.</li><li><strong>A chained concussion check.</strong> The screening runner exists for other conditions but has no concussion entry, and it cannot chain DVA/GST yet.</li></ul>
+<h3 id="checks-built-from-the-knowledge-graph">Checks, built from the knowledge graph</h3>
+<p>Source: <code>apps/admin-portal/data/research</code>, commit 785e3dff. Durations are the catalog's own.</p>
+<div class="tw"><table class="spec-t"><thead><tr><th>Test</th><th>Code</th><th>Seconds</th><th>Sensors</th><th>Biomarkers produced (feature status)</th></tr></thead><tbody><tr><td>Light Response</td><td>TST-00006</td><td>15</td><td>SRC-00019 TrueDepth camera, SRC-00018 IR depth, SRC-00016 OLED</td><td>BMK-00075 pupil asymmetry, BMK-00069 PLR amplitude, BMK-00071 PLR latency, BMK-00017 constriction velocity (all computed)</td></tr><tr><td>Follow the Dot</td><td>TST-00002</td><td>75</td><td>SRC-00003 ARKit gaze, SRC-00002 ARKit face, SRC-00016 OLED</td><td>BMK-00080 saccade peak velocity, BMK-00084 smooth pursuit gain (computed)</td></tr><tr><td>Hold and Look</td><td>TST-00005</td><td>30</td><td>TrueDepth, ARKit face and gaze</td><td>BMK-00006 blink rate, BMK-00024 fixation stability (computed)</td></tr><tr><td>Head Turn (DVA/GST)</td><td>TST-00004</td><td>60</td><td>SRC-00003, SRC-00016</td><td>BMK-00159 gaze stabilization (FTR-00162 planned, no computer)</td></tr></tbody></table></div>
+<ul><li><strong>Sideline check:</strong> Light Response, Follow the Dot, Hold and Look. 120 s of capture. Hold and Look is required because blink rate is a model input.</li><li><strong>Full check</strong> (baselines, daily recovery, in clinic): the sideline tests plus Head Turn. 180 s of capture. Head Turn is recorded but cannot score until FTR-00162 is built.</li><li>Read Aloud is not used: no TBI condition in the graph references it.</li></ul>
+<h3 id="decision-rules">Decision rules</h3>
+<p>The model is <code>concussion-oculomotor-screen-v1</code>, run exactly as the catalog defines it. It has four domains: saccade &lt; 350°/s, pursuit gain &lt; 0.80, gaze stabilization &lt; 95°/s, and blink &lt; 10 or &gt; 25 per minute. Three or more flags give probability 0.75, one or two give 0.40, and none gives 0.05. The vestibular domain cannot flag yet.</p>
+<p>Sideline product rules on top of the graph (these are not catalog content):</p>
+<ol><li><strong>Could not measure:</strong> any sideline biomarker returns null. The feature <code>missing_policy</code> returns null when capture quality is too low.</li><li><strong>Call 911:</strong> pupil asymmetry (BMK-00075) over 1.0 mm. This is the CND-00260 red flag "anisocoria over 1 mm".</li><li><strong>Remove from play:</strong> model probability 0.40 or higher, or a CND-00066 required biomarker outside its catalog reference range.</li><li><strong>No change detected:</strong> otherwise. It never reads as safe.</li></ol>
+<p>A <strong>Call 911</strong> button stays on screen for what the coach can see and no sensor can measure: a seizure, a player knocked out, repeated vomiting, or loss of movement.</p>
+<h3 id="recovery-rules-product-rules">Recovery rules (product rules)</h3>
+<ul><li>Return-to-learn and return-to-sport step 2 start after 48 hours, by time alone (Amsterdam 2022 relative rest).</li><li>After that, a daily full check with no model flags and in-range pupils moves both ladders up one step the next day. A check with 3 or more flags moves them back one step. Anything in between holds.</li><li>Sport step 4 needs full-time school. Step 5 needs a clinician's signature.</li><li><strong>Ready for review:</strong> two consecutive clean checks after step 4 has started.</li></ul>
+<h3 id="baseline">Baseline</h3>
+<p>The catalog has no per-athlete baseline model; every threshold is a population norm. So decisions use catalog thresholds, and the athlete's baseline is shown for context only. The baseline also has one decision role: a baseline that already trips the model, or has required biomarkers out of range with good capture, is flagged as possible low effort (sandbagging), and the trainer can ask for a retake. A baseline-relative model is a gap to add to the graph.</p>
+<h2 id="6-user-journeys">6. User journeys</h2>
+<p>Each journey lists who acts, what they see, and where it can go wrong. Screen IDs refer to section 7.</p>
+<h3 id="j1-preseason-setup-and-baselines">J1. Preseason setup and baselines</h3>
+<div class="tw"><table class="spec-t"><thead><tr><th>#</th><th>Actor</th><th>Step</th><th>Screen</th><th>Risk and design response</th></tr></thead><tbody><tr><td>1</td><td>Marcus or Dana</td><td>Creates the school, picks the state, imports or types the roster</td><td>C-Setup</td><td>State sets who may clear. Wrong state means wrong rules, so it is confirmed twice.</td></tr><tr><td>2</td><td>App</td><td>Sends each parent the state information sheet and a consent request; players 18 or over consent themselves</td><td>Parent link (web)</td><td>No consent means no baseline. The roster shows who is missing.</td></tr><tr><td>3</td><td>Player</td><td>Records a full baseline on their own phone at home, or in a group session run by Marcus, or at Dr. Okafor's preseason physical</td><td>P-Baseline</td><td>Sandbagging and poor capture. Each test shows a quality score; poor quality asks for a retake; a baseline far below population norms is marked for review.</td></tr><tr><td>4</td><td>Coach</td><td>Sees roster status: baseline done, needs retake, missing consent</td><td>C-Roster</td><td>A player with no baseline can still be checked, but the result says it compares against population ranges only, which is weaker.</td></tr></tbody></table></div>
+<h3 id="j2-sideline-check-after-a-hit">J2. Sideline check after a hit</h3>
+<div class="tw"><table class="spec-t"><thead><tr><th>#</th><th>Actor</th><th>Step</th><th>Screen</th><th>Risk and design response</th></tr></thead><tbody><tr><td>1</td><td>Dana</td><td>Taps "Check a player", picks the player</td><td>C-Roster</td><td>Speed matters. Recent and starting players are listed first.</td></tr><tr><td>2</td><td>App</td><td>No questions. Setup steps only, with a Call 911 button always visible</td><td>C-Check</td><td>The coach never judges the player.</td></tr><tr><td>3</td><td>Dana</td><td>Holds the phone at arm's length, screen facing the player, for the 2-minute check. Audio and vibration mark start, halfway, and done, because she cannot see the screen</td><td>C-Check</td><td>Sun glare, helmet, sweat. The app tells her to move to shade and remove the helmet before starting.</td></tr><tr><td>4</td><td>App</td><td>Runs the model and the decision rules (section 5) and shows one of four outcomes, with the flags that fired and each value's measurement chain</td><td>C-Result</td><td>See outcomes below.</td></tr><tr><td>5</td><td>Dana</td><td>Logs the decision. If removed, the parent is notified and a case opens</td><td>C-Result, C-Case</td><td>A removal cannot be undone by the coach. Only a clinician can close a case.</td></tr></tbody></table></div>
+<p>The four outcomes:</p>
+<ol><li><strong>Emergency.</strong> Pupil asymmetry over 1.0 mm (CND-00260), or the coach pressed Call 911. "Call 911 now." Shows the measured value and the baseline value if there is one.</li><li><strong>Remove from play.</strong> Model probability 0.40 or higher, or a CND-00066 required biomarker outside its catalog range. "Remove from play. Get evaluated by a healthcare provider today." Shows the probability, which domains flagged, each value against its threshold with its BMK code, and the measurement chain.</li><li><strong>No change detected.</strong> Model probability 0.05 and pupils in range. "This does not rule out a concussion." Large button: "Remove anyway". No green colour, no check mark.</li><li><strong>Could not measure.</strong> A sideline biomarker came back null because capture quality was too low. "Retry in shade, or treat as suspected and remove." Two retries at most.</li></ol>
+<h3 id="j3-removal-and-handoff">J3. Removal and handoff</h3>
+<div class="tw"><table class="spec-t"><thead><tr><th>#</th><th>Actor</th><th>Step</th><th>Screen</th><th>Risk and design response</th></tr></thead><tbody><tr><td>1</td><td>App</td><td>Opens a case with the timestamp, check data, outcome, and who ran it</td><td>C-Case</td><td>Audit trail starts here.</td></tr><tr><td>2</td><td>App</td><td>Sends the parent a message with what happened, emergency signs to watch for overnight, and how to book an evaluation</td><td>Parent message</td><td>Parent does not have the app. The message works by SMS and email.</td></tr><tr><td>3</td><td>Player</td><td>Sees "Your recovery has started", with return-to-learn step 1 and the symptom check-in</td><td>P-Home</td><td>Day-one tone is calm, not alarming.</td></tr><tr><td>4</td><td>Clinician</td><td>Receives the case if the school has a linked clinic (Dr. Okafor), or when the family shares a secure link with their own doctor (Dr. Ruiz)</td><td>D-Cases or D-Report</td><td>Doctors without the app still get a usable report in the browser.</td></tr></tbody></table></div>
+<h3 id="j4-recovery">J4. Recovery</h3>
+<div class="tw"><table class="spec-t"><thead><tr><th>#</th><th>Actor</th><th>Step</th><th>Screen</th><th>Risk and design response</th></tr></thead><tbody><tr><td>1</td><td>Player</td><td>From day 2, one full check a day (3 minutes). No symptom questionnaire.</td><td>P-Check</td><td>Checks are taken from the player's own face, with capture quality recorded. A player can ask to be checked, which can only hold them back.</td></tr><tr><td>2</td><td>App</td><td>Shows the model probability by day and key biomarkers against the model thresholds and the baseline</td><td>P-Progress</td><td>Stalls are shown as measurements, not judgments.</td></tr><tr><td>3</td><td>App</td><td>Moves both ladders by the recovery rules in section 5 and states why each day ("Yesterday's check had 3 or more flags. Back one step.")</td><td>P-Stages</td><td>Jalen cannot talk his way up a step.</td></tr><tr><td>4</td><td>Coach or Marcus</td><td>Sees the player's current stage and what they may do at practice today</td><td>C-Case</td><td>The coach sees restrictions, not detailed health data.</td></tr><tr><td>5</td><td>Clinician</td><td>Sees daily data, can change the stage, add notes, or ask for an in-clinic visit</td><td>D-Case</td><td>Dr. Okafor watches many cases. Cases sort by those needing attention.</td></tr></tbody></table></div>
+<h3 id="j5-clearance">J5. Clearance</h3>
+<div class="tw"><table class="spec-t"><thead><tr><th>#</th><th>Actor</th><th>Step</th><th>Screen</th><th>Risk and design response</th></tr></thead><tbody><tr><td>1</td><td>App</td><td>After two consecutive clean checks (no model flags, pupils in range) with step 4 started, it prepares the report: model by day, all biomarkers with catalog ranges, the full measurement chain, and the model's limits</td><td>D-Report</td><td>The app never says "ready to play". It says "ready for clinician review". Symptoms are assessed in the clinician's exam.</td></tr><tr><td>2</td><td>Clinician</td><td>Reviews the report, can examine the player, and decides: clear for full contact, not yet, or refer on</td><td>D-Report</td><td>Only a credential allowed by the school's state can sign. The app checks the credential type.</td></tr><tr><td>3</td><td>App</td><td>Records the decision with name, credential, licence number, timestamp, and the report version reviewed</td><td>D-Signoff</td><td>This is the written clearance the law requires.</td></tr><tr><td>4</td><td>Player and coach</td><td>See "Cleared by Dr. Ruiz for step 5: full-contact practice" and continue to step 6</td><td>P-Stages, C-Case</td><td>Return to play still follows steps 5 and 6.</td></tr><tr><td>5</td><td>Athletic director</td><td>Gets the closed case in the school log</td><td>Export</td><td>Timestamped, read-only record.</td></tr></tbody></table></div>
+<h3 id="j6-second-hit-during-recovery">J6. Second hit during recovery</h3>
+<p>If a player in an open case is checked again on the sideline, the result compares against the original pre-injury baseline, not the recovering values, and the case reopens at step 1. The coach sees "This player has an open concussion case" before the check starts.</p>
+<h2 id="7-screens">7. Screens</h2>
+<p><strong>Coach app (Dana, Marcus)</strong></p>
+<ul><li>C-Setup: school, state, teams, roster import</li><li>C-Roster: players, with baseline status and open cases</li><li>C-How: how the check works (tests, biomarkers, decision rules)</li><li>C-Check: setup, guided 2-minute check with audio and vibration cues, Call 911 always visible</li><li>C-Result: one of four outcomes</li><li>C-Case: timeline, current stage, practice restrictions</li><li>C-Log: school's timestamped record and export</li></ul>
+<p><strong>Player app (Jalen, Priya)</strong></p>
+<ul><li>P-Onboard: consent status, what the app is and is not</li><li>P-Baseline: full check with quality feedback and retakes</li><li>P-Home: today's tasks</li><li>P-Ask: ask to be checked (optional, can only hold the player back)</li><li>P-Check: daily full check</li><li>P-Progress: model probability by day, biomarker trends</li><li>P-Stages: return-to-learn and return-to-sport steps</li></ul>
+<p><strong>Devices:</strong> coaches and players use iPhone (TrueDepth front camera). Clinicians use iPad: Dr. Okafor in the iPad app, where an iPad Pro's TrueDepth camera runs in-clinic checks; Dr. Ruiz opens a shared link in Safari on her iPad with no account.</p>
+<p><strong>Clinician (iPad)</strong></p>
+<ul><li>D-Cases: case list across schools, sorted by need</li><li>D-Case: daily data, notes, stage changes</li><li>D-Report: one-page clearance report</li><li>D-Signoff: decision and credential capture</li><li>D-ClinicCheck: run a full check in clinic</li></ul>
+<p>One app with a role chosen at sign-in. Clinicians without an account get D-Report and D-Signoff from a secure link.</p>
+<h2 id="8-prototype-plan">8. Prototype plan</h2>
+<p>A single self-contained HTML page with an iPhone frame and a persona switcher (six personas). Scripted data, no backend. It covers J1 to J6 end to end. The sideline check is simulated: a moving dot and screen flashes, then a chooser lets the reviewer pick which of the four outcomes to see. Published as a private link for sharing.</p>
+<p><strong>Audience and purpose (decided):</strong> coaches and players see it first. It is a fully working, demo-ready app running on demo data, and it is the design reference for the real app, which will be built in Flutter later. Screens, states, wording, and the data it implies should be treated as the spec. Clinician views are included so the story ends at sign-off. Wording is written for a 15-year-old and a volunteer coach first.</p>
+<p>Prototype file: <code>prototype/index.html</code>.</p>
+<p>Prototype decisions (my calls, open to change):</p>
+<ul><li><strong>One shared case.</strong> All personas act on the same scripted season. A day control ("Day 0, Day 1, ...") moves time forward, so the 24-hour rule, stage changes, and sign-off show up for every persona. Switching from Dana to Priya to Dr. Ruiz follows one case end to end.</li><li><strong>Surfaces outside the phone.</strong> Dr. Ruiz's report and sign-off render in a browser-window frame. Parent SMS and email, and the athletic director export, appear in a side panel labelled "Sent outside the app". Dr. Okafor uses the phone frame for in-clinic checks and the browser frame for his case list.</li><li><strong>No-baseline result.</strong> Not a fifth outcome. Outcomes 2 and 3 carry a fixed banner: "No baseline on file. Compared with typical ranges for this age, which is less reliable." The roster shows the player with a warning before the check.</li><li><strong>Cues during the check.</strong> Real audio tones and a spoken cue through the browser, plus a large visual cue for the reviewer. Vibration is called where the browser supports it. The iOS build needs its own haptic and audio spec.</li><li><strong>Numbers.</strong> Real-looking values in real units (pupil asymmetry in mm, light reflex amplitude in mm and latency in ms, pursuit gain as a ratio, saccade velocity in degrees per second, blink rate per minute), each shown as baseline vs. today vs. the player's normal range. Every data screen carries a "Sample data" label.</li><li><strong>State rules.</strong> One state, Maryland: a licensed physician, or a PA or NP under physician delegation, may sign. The state setting is visible in setup but fixed in the prototype. The full state table is an open item.</li><li><strong>Clearance point.</strong> Before return-to-sport step 5, as set in section 4.</li><li><strong>No symptom list.</strong> Superseded: decisions use measurements only (section 1).</li><li><strong>Scenario picker.</strong> After a demo check, the presenter picks what happened to the player (concussed, pupils unequal, not concussed, glare). The app then runs the real model and rules on matching demo values. Only the values are scripted, never the outcome.</li><li><strong>On a real iPhone</strong> the app fills the screen, with a bar at the top to switch persona and day.</li></ul>
+<h2 id="9-open-items">9. Open items</h2>
+<ul><li>State-by-state clearance credential table.</li><li>Where in the return-to-sport sequence written clearance is required (Amsterdam 2022 text not yet read in full).</li><li>FDA pathway decision: 510(k) under QEA, or a narrower claim.</li><li>Pupil accuracy outdoors in daylight. The current pupil method uses a dark-pixel threshold and may not work in sunlight on a sideline.</li><li>Graph gaps Sideline depends on: FTR-00162 gaze stabilization has no computer; no baseline-relative model; no numeric threshold for a fixed pupil; <code>head-sway-v1</code> (balance) is computed but no test feeds it; the model is planned and unvalidated (expected AUC 0.73).</li><li>The return-to-sport protocol (Amsterdam 2022) and state laws gate progression on symptoms. Sideline gates on measurements and leaves symptoms to the clinician's exam. This needs clinician sign-off.</li><li>Catalog fixes: mark <code>concussion-or-mtbi-acute</code> as longitudinal, and add the pupil biomarkers to <code>concussion-oculomotor-screen-v1</code>'s inputs.</li></ul></article></div>
+<script>
+(function(){
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ===== Knowledge graph snapshot: OculoDx catalog, apps/admin-portal/data/research, commit 785e3dff ===== */
+const SNAPSHOT = 'OculoDx catalog, commit 785e3dff';
+const SENSORS = {
+  'truedepth-rgb':['SRC-00019','TrueDepth Camera System'],
+  'truedepth-depth':['SRC-00018','TrueDepth IR Depth Sensor'],
+  'arkit-gaze':['SRC-00003','ARKit Gaze Estimation'],
+  'arkit-face-tracking':['SRC-00002','ARKit Face Tracking'],
+  'stimulus-oled':['SRC-00016','OLED Display (stimulus)']
+};
+const TESTS = {
+  'light-response':{code:'TST-00006', name:'Light Response', secs:15, sensors:['truedepth-rgb','truedepth-depth','stimulus-oled'], says:'The screen goes dark, then flashes bright three times.'},
+  'follow-the-dot':{code:'TST-00002', name:'Follow the Dot', secs:75, sensors:['arkit-gaze','arkit-face-tracking','stimulus-oled'], says:'A dot moves side to side. Follow it with the eyes, head still.'},
+  'hold-and-look':{code:'TST-00005', name:'Hold and Look', secs:30, sensors:['truedepth-rgb','truedepth-depth','arkit-face-tracking','arkit-gaze'], says:'Look at the screen and hold still.'},
+  'head-turn':{code:'TST-00004', name:'Head Turn (DVA/GST)', secs:60, sensors:['arkit-gaze','stimulus-oled'], says:'Read a letter while turning the head side to side.'}
+};
+const OBS = {
+  'truedepth-video-v1':['OBS-00045','TrueDepth Pupil Video'],
+  'gaze-stream-v1':['OBS-00041','Gaze Position Stream'],
+  'anterior-segment-image-v1':['OBS-00006','Anterior-Segment Image'],
+  'dva-gst-response-v1':['OBS-00054','DVA/GST Response Log']
+};
+/* Biomarkers in the TBI & Concussion subgraph that these tests produce. ref = catalog reference_range. */
+const BMK = [
+  {id:'pupil-asymmetry-v1', bmk:'BMK-00075', ftr:'FTR-00080', name:'Pupil size difference', unit:'mm', dp:1, test:'light-response', obs:'truedepth-video-v1',
+   computers:['PupilDiameterBaselineV1','PupilAsymmetryV1'], ref:'< 0.4 mm', inRef:v => v < 0.4, roles:['CND-00066 required','CND-00260 helpful']},
+  {id:'plr-amplitude-v1', bmk:'BMK-00069', ftr:'FTR-00072', name:'Pupil reaction to light', unit:'mm', dp:1, test:'light-response', obs:'truedepth-video-v1',
+   computers:['PupilDiameterBaselineV1','PLRComputers'], ref:'1.5 – 3.5 mm', inRef:v => v >= 1.5 && v <= 3.5, roles:['CND-00066 required','CND-00002 required','CND-00260 required']},
+  {id:'plr-latency-v1', bmk:'BMK-00071', ftr:'FTR-00074', name:'Pupil reaction time', unit:'ms', dp:0, test:'light-response', obs:'truedepth-video-v1',
+   computers:['PupilDiameterBaselineV1','PLRComputers'], ref:'200 – 250 ms', inRef:v => v >= 200 && v <= 250, roles:['CND-00260 helpful']},
+  {id:'constriction-velocity-v1', bmk:'BMK-00017', ftr:'FTR-00013', name:'Pupil constriction speed', unit:'mm/s', dp:1, test:'light-response', obs:'truedepth-video-v1',
+   computers:['PupilDiameterBaselineV1','PLRComputers'], ref:'4 – 6 mm/s', inRef:v => v >= 4 && v <= 6, roles:['CND-00260 required']},
+  {id:'saccade-peak-velocity-v1', bmk:'BMK-00080', ftr:'FTR-00086', name:'Fast eye movement speed', unit:'°/s', dp:0, test:'follow-the-dot', obs:'gaze-stream-v1',
+   computers:['GazeDeviationHorizontalV1','SaccadePeakVelocityV1'], ref:'350 – 600 °/s', inRef:v => v >= 350 && v <= 600, roles:['CND-00066 required','CND-00002 required','CND-00220 required'],
+   domain:'Saccade', rule:'< 350', flag:v => v < 350, plain:v => 'Quick eye jumps were slow: ' + Math.round(v) + '°/s. The model flags below 350.'},
+  {id:'smooth-pursuit-gain-v1', bmk:'BMK-00084', ftr:'FTR-00090', name:'Eye tracking (pursuit gain)', unit:'', dp:2, test:'follow-the-dot', obs:'gaze-stream-v1',
+   computers:['GazeDeviationHorizontalV1','SmoothPursuitGainV1'], ref:'0.90 – 1.00', inRef:v => v >= 0.9 && v <= 1.0, roles:['CND-00002 required'],
+   domain:'Pursuit', rule:'< 0.80', flag:v => v < 0.8, plain:v => 'The eyes fell behind the moving dot: gain ' + v.toFixed(2) + '. The model flags below 0.80.'},
+  {id:'fixation-stability-bcea-v1', bmk:'BMK-00024', ftr:'FTR-00023', name:'Steadiness of gaze (BCEA)', unit:'deg²', dp:2, test:'hold-and-look', obs:'gaze-stream-v1',
+   computers:['GazeDeviationHorizontalV1','FixationStabilityBCEAV1'], ref:'< 1.5 deg²', inRef:v => v < 1.5, roles:['CND-00066 helpful','CND-00002 helpful']},
+  {id:'blink-rate-v1', bmk:'BMK-00006', ftr:'FTR-00005', name:'Blink rate', unit:'/min', dp:0, test:'hold-and-look', obs:'anterior-segment-image-v1',
+   computers:['LidMarginPositionV1 + PalpebralFissureHeightV1','BlinkRateV1'], ref:'12 – 20 /min', inRef:v => v >= 12 && v <= 20, roles:['CND-00220 required'],
+   domain:'Blink', rule:'< 10 or > 25', flag:v => v < 10 || v > 25, plain:v => 'Blink rate was ' + Math.round(v) + ' per minute. The model flags below 10 or above 25.'},
+  {id:'gaze-stabilization-max-head-velocity-v1', bmk:'BMK-00159', ftr:'FTR-00162', name:'Gaze stabilization (head speed)', unit:'°/s', dp:0, test:'head-turn', obs:'dva-gst-response-v1',
+   computers:[], planned:true, ref:'≥ 95 °/s', inRef:v => v >= 95, roles:['CND-00066 required','CND-00002 required','CND-00220 required'],
+   domain:'Vestibular', rule:'< 95', flag:v => v < 95}
+];
+const B = Object.fromEntries(BMK.map(b => [b.id, b]));
+const MODEL = {id:'concussion-oculomotor-screen-v1', status:'planned', tier:'demo', auc:'0.73 expected, not yet measured', validation:'unvalidated'};
+const REQ66 = BMK.filter(b => b.roles.includes('CND-00066 required') && !b.planned);
+const SIDELINE_TESTS = ['light-response','follow-the-dot','hold-and-look'];
+const FULL_TESTS = ['light-response','follow-the-dot','hold-and-look','head-turn'];
+const secsOf = list => list.reduce((a, t) => a + TESTS[t].secs, 0);
+
+function runModel(v){
+  const domains = BMK.filter(b => b.domain).map(b => {
+    if (b.planned) return {b, status:'not built', flagged:false};
+    const x = v[b.id];
+    if (x == null) return {b, status:'not measured', flagged:false};
+    return {b, status:b.flag(x) ? 'flagged' : 'normal', flagged:b.flag(x), value:x};
+  });
+  const n = domains.filter(d => d.flagged).length;
+  return {n, p: n >= 3 ? 0.75 : n >= 1 ? 0.40 : 0.05, domains};
+}
+/* Sideline decision rules. These are product rules on top of the graph, not catalog content. */
+function decide(v){
+  const missing = SIDELINE_TESTS.some(t => BMK.some(b => b.test === t && !b.planned && v[b.id] == null));
+  if (missing) return {outcome:'fail'};
+  const m = runModel(v);
+  const outReq = REQ66.filter(b => !b.inRef(v[b.id]));
+  if (v['pupil-asymmetry-v1'] > 1.0) return {outcome:'emergency', model:m, outReq};
+  if (m.p >= 0.40 || outReq.length) return {outcome:'remove', model:m, outReq};
+  return {outcome:'nochange', model:m, outReq};
+}
+
+/* ===== Demo data (not real people, not real measurements) ===== */
+const K = ['pupil-asymmetry-v1','plr-amplitude-v1','plr-latency-v1','constriction-velocity-v1','saccade-peak-velocity-v1','smooth-pursuit-gain-v1','fixation-stability-bcea-v1','blink-rate-v1'];
+const vec = a => Object.fromEntries(K.map((k, i) => [k, a[i]]));
+const BASE_GOOD = vec([0.2, 2.6, 226, 5.1, 452, 0.94, 0.60, 15]);
+const BASE_JALEN_LOW = vec([0.2, 1.6, 248, 4.1, 338, 0.78, 1.10, 14]);
+const BASE_JALEN_RETAKE = vec([0.1, 2.8, 221, 5.4, 471, 0.95, 0.50, 16]);
+const SCEN = {
+  concussed:{label:'Hard head contact, concussed', v:vec([0.3, 1.9, 268, 3.7, 318, 0.71, 1.90, 28])},
+  bleed:{label:'Head contact, pupils become unequal', v:vec([1.4, 1.2, 290, 3.1, 330, 0.73, 2.10, 27])},
+  fine:{label:'Knock to the shoulder, not concussed', v:vec([0.2, 2.5, 230, 5.0, 446, 0.93, 0.70, 16])},
+  glare:{label:'Bright sun, phone moving', v:vec([null, null, null, null, 441, 0.92, 0.80, null])}
+};
+/* Daily full checks during recovery, by day since the case opened. Day 1 has no check. */
+const DAILY = {
+  2:vec([0.3, 2.0, 262, 3.9, 330, 0.74, 1.70, 27]),
+  3:vec([0.3, 2.1, 255, 4.0, 342, 0.77, 1.50, 24]),
+  4:vec([0.2, 2.3, 244, 4.4, 362, 0.82, 1.20, 22]),
+  5:vec([0.3, 2.1, 252, 4.0, 345, 0.76, 1.60, 26]),
+  6:vec([0.2, 2.4, 238, 4.7, 384, 0.86, 1.00, 19]),
+  7:vec([0.2, 2.5, 232, 4.9, 410, 0.90, 0.80, 17]),
+  8:vec([0.2, 2.6, 228, 5.0, 436, 0.93, 0.70, 16]),
+  9:vec([0.2, 2.6, 227, 5.1, 448, 0.94, 0.60, 15])
+};
+
+const PERSONAS = {
+  dana:   {name:'Dana Whitfield', ini:'DW', group:'Coach', role:'Head coach, Empower MMA youth team', kind:'coach', team:'dana'},
+  marcus: {name:'Marcus Bell', ini:'MB', group:'Coach', role:'Athletic trainer, college men’s basketball', kind:'coach', team:'marcus'},
+  priya:  {name:'Priya Nair', ini:'PN', group:'Player', role:'13, green belt. Second concussion.', kind:'player', player:'priya'},
+  jalen:  {name:'Jalen Brooks', ini:'JB', group:'Player', role:'20, point guard. Hoping to go pro.', kind:'player', player:'jalen'},
+  ruiz:   {name:'Dr. Elena Ruiz', ini:'ER', group:'Clinician', role:'Pediatrician. Opens a shared link on iPad.', kind:'ruiz'},
+  okafor: {name:'Dr. Tom Okafor', ini:'TO', group:'Clinician', role:'Team physician, Chesapeake State. iPad app.', kind:'okafor'}
+};
+const TEAMS = {
+  dana:   {school:'Empower MMA', team:'Youth MMA team, ages 11–14', staff:'Coach Whitfield', clinic:null, mark:'MMA', eventWord:'tournament',
+           event:'Spring Youth Open · grappling, round 2', ruleShort:'Club policy, Maryland law',
+           rule:'Empower MMA policy, matching Maryland youth sports law: written clearance by a licensed physician, or a PA or NP working under a physician.',
+           atNo:'Under Empower MMA policy, matching Maryland youth sports law, an athletic trainer cannot sign clearance.', colors:['#7C3AED','#FFC93C'], avbg:'#2A1B4D'},
+  marcus: {school:'Chesapeake State University', team:'Men’s basketball', staff:'Marcus Bell, ATC', clinic:'Chesapeake State Sports Medicine', mark:'CSU', eventWord:'game',
+           event:'Conference game vs. Coastal Tech · 2nd half', ruleShort:'NCAA protocol',
+           rule:'NCAA concussion protocol: the team physician, or a physician they designate, makes the return-to-play decision.',
+           atNo:'Under the NCAA protocol the team physician or a physician designee signs, not an athletic trainer.', colors:['#1D5BFF','#3EE6FF'], avbg:'#13244D'}
+};
+const PLAYERS = {
+  priya: {name:'Priya Nair', first:'Priya', belt:'green', team:'dana', pro:['she','her','her'], parent:'Anita Nair', baseline:'Aug 18', look:{skin:'#C98E62', hair:'long', hc:'#1E1A1A'}},
+  maya:  {name:'Maya Reyes', first:'Maya', belt:'orange', team:'dana', baseline:'Aug 18', look:{skin:'#E8B48F', hair:'ponytail', hc:'#3B2618'}},
+  leo:   {name:'Leo Kowalski', first:'Leo', belt:'yellow', team:'dana', baseline:'Aug 18', look:{skin:'#F5D3B3', hair:'short', hc:'#C99A4B'}},
+  nora:  {name:'Nora Hale', first:'Nora', belt:'grey', team:'dana', baseline:'Aug 18', retake:true, look:{skin:'#F5D3B3', hair:'long', hc:'#A8461F'}},
+  malik: {name:'Malik Grant', first:'Malik', belt:'green', team:'dana', baseline:'Aug 18', look:{skin:'#7A4A2E', hair:'buzz', hc:'#141414'}},
+  ava:   {name:'Ava Thompson', first:'Ava', belt:'orange', team:'dana', baseline:'Aug 18', look:{skin:'#A86B45', hair:'bun', hc:'#1E1A1A'}},
+  casey: {name:'Casey Lin', first:'Casey', belt:'white', team:'dana', baseline:null, look:{skin:'#EBC5A0', hair:'short', hc:'#1E1A1A'}},
+  jalen: {name:'Jalen Brooks', first:'Jalen', num:3, team:'marcus', pro:['he','him','his'], parent:'Denise Brooks', adult:true, baseline:'Aug 14', look:{skin:'#5A3825', hair:'buzz', hc:'#141414'}},
+  luis:  {name:'Luis Ortega', first:'Luis', num:11, team:'marcus', adult:true, baseline:'Aug 14', look:{skin:'#C98E62', hair:'curly', hc:'#1E1A1A'}},
+  sam:   {name:'Sam Tran', first:'Sam', num:22, team:'marcus', adult:true, baseline:'Aug 14', look:{skin:'#EBC5A0', hair:'short', hc:'#1E1A1A'}},
+  devon: {name:'Devon Price', first:'Devon', num:34, team:'marcus', adult:true, baseline:'Aug 14', look:{skin:'#7A4A2E', hair:'afro', hc:'#141414'}},
+  eli:   {name:'Eli Becker', first:'Eli', num:44, team:'marcus', adult:true, baseline:'Aug 14', retake:true, look:{skin:'#F5D3B3', hair:'short', hc:'#6B4226'}}
+};
+const BELT = {white:'#F4F4F0', grey:'#9AA0A6', yellow:'#F2D21B', orange:'#F28C28', green:'#22A35A'};
+const tag = p => p.num ? '#' + p.num : cap(p.belt) + ' belt';
+const notifyTo = p => p.adult ? p.name + ' (athlete)' : 'Parent of ' + p.name + (p.parent ? ' (' + p.parent + ')' : '');
+const notifyWho = p => p.adult ? 'the athlete and team physician' : 'the parent';
+function avatar(pid, cls){
+  const p = PLAYERS[pid], L = p.look, T = TEAMS[p.team], hc = L.hc;
+  const short = '<path d="M21 27c0-8 5-12.5 11-12.5S43 19 43 27c-2.5-4-6.5-6-11-6s-8.5 2-11 6z" fill="' + hc + '"/>';
+  let back = '', front = short;
+  if (L.hair === 'long'){ back = '<path d="M19 30c0-11 6-16 13-16s13 5 13 16v16h-6V31H25v15h-6z" fill="' + hc + '"/>'; front = '<path d="M21 27c1-7 5-11 11-11s10 4 11 11c-3-3-6-5-11-5s-8 2-11 5z" fill="' + hc + '"/>'; }
+  if (L.hair === 'bun') back = '<circle cx="32" cy="12.5" r="5" fill="' + hc + '"/>';
+  if (L.hair === 'ponytail') back = '<path d="M41 19c6 2 8 9 5.5 16-1.5-4-3.5-6.5-6.5-7.5z" fill="' + hc + '"/>';
+  if (L.hair === 'afro'){ back = '<circle cx="32" cy="24" r="15" fill="' + hc + '"/>'; front = ''; }
+  if (L.hair === 'curly') front = '<path d="M20 27c-1-9 5-14 12-14s13 5 12 14c-1-2-2-3-3-3 0-2-2-3-3-3-1-1-3-2-6-2s-5 1-6 2c-1 0-3 1-3 3-1 0-2 1-3 3z" fill="' + hc + '"/>';
+  if (L.hair === 'buzz') front = '<path d="M21.2 25.5c.8-7 5-11 10.8-11s10 4 10.8 11c-3-2.6-6.6-3.6-10.8-3.6s-7.8 1-10.8 3.6z" fill="' + hc + '"/>';
+  const body = p.belt
+    ? '<path d="M9 64c1.5-11 10-17 23-17s21.5 6 23 17z" fill="#F7F7F2"/><path d="M25.5 47.5l6.5 8.5 6.5-8.5" fill="none" stroke="#CFCFC4" stroke-width="2"/>'
+    : '<path d="M9 64c1.5-11 10-17 23-17s21.5 6 23 17z" fill="' + T.colors[0] + '"/><path d="M24 48c2 3 5 4.5 8 4.5s6-1.5 8-4.5" fill="none" stroke="' + T.colors[1] + '" stroke-width="2"/><text x="32" y="62.5" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="800" font-style="italic" font-size="9" fill="#FFFFFF">' + p.num + '</text>';
+  const ring = p.belt ? BELT[p.belt] : T.colors[1];
+  return '<svg class="av ' + (cls || '') + '" viewBox="0 0 64 64" role="img" aria-label="' + esc(p.name) + '"><defs><clipPath id="clip-' + pid + '"><circle cx="32" cy="32" r="28.5"/></clipPath></defs>' +
+    '<circle cx="32" cy="32" r="32" fill="' + ring + '"/><g clip-path="url(#clip-' + pid + ')"><circle cx="32" cy="32" r="28.5" fill="' + T.avbg + '"/>' + back + body +
+    '<rect x="28" y="38" width="8" height="10" rx="3" fill="' + L.skin + '"/><ellipse cx="32" cy="28" rx="11" ry="12.5" fill="' + L.skin + '"/><circle cx="21" cy="29" r="2.2" fill="' + L.skin + '"/><circle cx="43" cy="29" r="2.2" fill="' + L.skin + '"/>' + front +
+    '<circle cx="27.8" cy="29.5" r="1.4" fill="#1B1B1F"/><circle cx="36.2" cy="29.5" r="1.4" fill="#1B1B1F"/><path d="M28.5 34.5q3.5 2.6 7 0" fill="none" stroke="#6B2E25" stroke-width="1.4" stroke-linecap="round"/></g></svg>';
+}
+const sub = p => p.pro ? p.pro[0] : p.first;
+const pos = p => p.pro ? p.pro[2] : p.first + '’s';
+const obj = p => p.pro ? p.pro[1] : p.first;
+function baselineOf(pid){
+  const p = PLAYERS[pid]; if (!p.baseline) return null;
+  if (pid === 'jalen') return S.jb === 'good' ? BASE_JALEN_RETAKE : BASE_JALEN_LOW;
+  return BASE_GOOD;
+}
+
+const RTL = [
+  ['Relative rest','Rest at home for a day or two. Short screen time is OK.'],
+  ['Schoolwork at home','Light schoolwork at home, in short blocks.'],
+  ['Part-time school','Part days at school, with breaks.'],
+  ['Full-time school','Full school days, back to normal schoolwork.']
+];
+const RTS = [
+  ['Everyday activity','Walking around, daily routine. No exercise.','No practice. Can come and watch.'],
+  ['Light exercise','Walking or a stationary bike.','Light exercise only: walking or a bike. No team drills.'],
+  ['Individual drills','Footwork, shadow drills or shooting on your own. No contact.','Solo drills only: footwork, shadow drills, shooting. No contact.'],
+  ['Non-contact practice','Team practice with no sparring and no contact drills.','Non-contact practice. No sparring, no contact drills.'],
+  ['Full-contact practice','Full practice with contact. No competition yet.','Full-contact practice allowed. Not cleared to compete yet.'],
+  ['Back to competition','Back to full play, including games and matches.','Back to full play, including games and matches.']
+];
+const DAYMIN = -1, DAYMAX = 12;
+const dateOf = d => d < 0 ? new Date(2026,7,18) : new Date(2026,9,2+d);
+const dshort = d => dateOf(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const dlong = d => dateOf(d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+const clock = () => S.day === 0 ? '7:42 PM' : S.day < 0 ? '3:30 PM' : '4:10 PM';
+
+function seedMsgs(){ return [
+  {day:-1, when:'Aug 10', ch:'Email', to:'Families, Empower MMA youth team (16)', text:'Maryland concussion information sheet, and consent for your child to record a Sideline baseline. 15 of 16 families have signed.'},
+  {day:-1, when:'Aug 12', ch:'Email', to:'Chesapeake State men’s basketball (15 athletes)', text:'NCAA concussion education and Sideline baseline consent. 15 of 15 athletes have signed.'},
+  {day:-1, when:'Aug 17', ch:'Text', to:'Parent of Casey Lin', text:'Empower MMA: please sign the concussion information sheet so Casey can record a baseline before the first tournament. Link: sideline.health/c/8H2'}
+]; }
+function seedLog(){ return [
+  {day:-1, when:'Aug 14', team:'marcus', text:'Men’s basketball baseline session: 14 of 15 recorded. Jalen Brooks flagged for review. Eli Becker needs a retake (glare).'},
+  {day:-1, when:'Aug 18', team:'dana', text:'Baseline session: 6 athletes recorded. Nora Hale needs a retake (glare). Casey Lin waiting on consent.'}
+]; }
+function fresh(){ return {
+  persona:'dana', day:0, sound:true, signedIn:false,
+  tab:{dana:'roster', marcus:'roster', priya:'today', jalen:'today', okafor:'list'},
+  view:{}, check:null, cases:{}, msgs:seedMsgs(), log:seedLog(), jb:'flagged',
+  reports:{}, dailyDone:{}, okPhone:false, openReport:null, signErr:'', selfReport:{}
+}; }
+let S = fresh();
+
+/* ===== case model: everything below derives from measurements ===== */
+function caseFor(pid){ const c = S.cases[pid]; return c && S.day >= c.openedDay ? c : null; }
+function valuesAt(c, k){ if (k === 0) return c.d0; if (k === 1 || k < 0) return null; return DAILY[Math.min(k, 9)]; }
+function probAt(c, k){ const v = valuesAt(c, k); return v ? runModel(v).p : null; }
+function okDay(c, k){ const v = valuesAt(c, k); return !!v && runModel(v).p === 0.05 && REQ66.every(b => b.inRef(v[b.id])); }
+/* Product rule: step 2 after 48 h of rest; then one step up per day after a check with no flags,
+   one step back after a check with 3+ flags. Step 4 needs full-time school. Step 5 needs a clinician. */
+function stagesAt(c, k){
+  let rtl = 1, rts = 1, why = 'Rest for the first 48 hours.';
+  for (let j = 1; j <= k; j++){
+    const p = probAt(c, j - 1);
+    if (j === 2){ rtl = 2; rts = 2; why = '48 hours of rest done. Light activity starts.'; continue; }
+    if (j < 2) continue;
+    if (p == null){ why = 'No check yesterday. Holding.'; continue; }
+    if (okDay(c, j - 1)){ if (rtl < 4) rtl++; if (rts < 3 || (rts === 3 && rtl === 4)) rts++; why = 'Yesterday’s check had no flags. Moved up.'; }
+    else if (p === 0.75){ if (rtl > 2) rtl--; if (rts > 2) rts--; why = 'Yesterday’s check had 3 or more flags. Back one step.'; }
+    else why = 'Yesterday’s check still had ' + runModel(valuesAt(c, j - 1)).n + ' flag' + (runModel(valuesAt(c, j - 1)).n === 1 ? '' : 's') + '. Holding.';
+  }
+  return {rtl, rts, why};
+}
+function cstate(c){
+  const k = S.day - c.openedDay;
+  const signed = c.signed && S.day >= c.signed.day ? c.signed : null;
+  let {rtl, rts, why} = stagesAt(c, k), closed = false;
+  if (signed){ const ks = signed.day - c.openedDay; rts = k >= ks + 1 ? 6 : 5; rtl = 4; closed = k >= ks + 1; why = 'Cleared by a clinician.'; }
+  const ready = !signed && k >= 2 && okDay(c, k) && okDay(c, k - 1) && stagesAt(c, k - 1).rts >= 4;
+  let readySince = null;
+  if (ready){ let j = k; while (j - 1 >= 3 && okDay(c, j - 1) && okDay(c, j - 2) && stagesAt(c, j - 2).rts >= 4) j--; readySince = c.openedDay + j; }
+  const shared = c.shared != null && S.day >= c.shared ? c.shared : null;
+  const reviews = (c.reviews || []).filter(r => S.day >= r.day);
+  const v = valuesAt(c, k);
+  return {k, rts, rtl, why, signed, ready, readySince, closed, shared, reviews, v, model:v ? runModel(v) : null};
+}
+function addMsg(ch, to, text){ S.msgs.push({day:S.day, when:dshort(S.day) + ', ' + clock(), ch, to, text}); }
+function addLog(team, text){ S.log.push({day:S.day, when:dshort(S.day) + ', ' + clock(), team, text}); }
+function openCase(pid, outcome, d0, model){
+  const p = PLAYERS[pid], t = TEAMS[p.team], by = PERSONAS[S.persona] ? PERSONAS[S.persona].name : t.staff;
+  const prev = caseFor(pid), second = !!(prev && !cstate(prev).closed);
+  S.cases[pid] = {openedDay:S.day, outcome, by, time:clock(), signed:null, reviews:[], shared:null, second, team:p.team, d0:d0 || SCEN.concussed.v};
+  const why = {emergency:'emergency', remove:'sideline check: model probability ' + (model ? model.p.toFixed(2) : ''), suspected:'suspected by staff', observed:'emergency sign seen by staff'}[outcome];
+  addLog(p.team, (second ? 'Second hit during recovery. Case restarted at step 1 for ' : 'Case opened for ') + p.name + ' (' + why + '). By ' + by + '.');
+  const link = 'sideline.health/f/' + pid.slice(0,2).toUpperCase() + '4R';
+  if (outcome === 'emergency' || outcome === 'observed'){
+    if (p.adult) addMsg('Text', 'Emergency contact of ' + p.name + (p.parent ? ' (' + p.parent + ')' : ''), '911 was called for ' + p.first + ' at today’s ' + t.eventWord + ' at ' + clock() + '. ' + t.staff + ' is with ' + obj(p) + '.');
+    else addMsg('Text', notifyTo(p), '911 was called for ' + p.first + ' at today’s ' + t.eventWord + ' at ' + clock() + '. ' + t.staff + ' is with ' + obj(p) + '. Please call ' + t.staff + ' now.');
+  } else if (p.adult) addMsg('Text', notifyTo(p), 'Sideline: you were removed from play at ' + clock() + ' today after a possible head injury. The team physician will see you before you return.\n\nCall 911 tonight if your headache gets worse, you vomit more than once, have a seizure, or are hard to wake. Don’t drive tonight.\n\nDetails: ' + link);
+  else addMsg('Text', notifyTo(p), p.first + ' was removed from play at ' + clock() + ' today after a possible head injury. ' + cap(sub(p)) + ' needs to be seen by a healthcare provider before returning.\n\nCall 911 tonight if ' + sub(p) + ' has a headache that gets worse, vomits more than once, has a seizure, or is hard to wake.\n\nDetails: ' + link);
+  if (t.clinic) addMsg('Secure link', 'Dr. Tom Okafor, ' + t.clinic, 'New case: ' + p.name + ', ' + t.team + '. Opened ' + dshort(S.day) + ' at ' + clock() + '. Sideline check results attached.');
+}
+
+/* ===== audio cues ===== */
+let AC = null;
+function tone(f, ms){ if (!S.sound) return; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = f; o.connect(g); g.connect(AC.destination); const t = AC.currentTime; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + ms/1000); o.start(t); o.stop(t + ms/1000 + 0.05); } catch(e){} }
+function say(text){ if (!S.sound) return; try { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(text)); } catch(e){} }
+function buzz(p){ try { if (navigator.vibrate) navigator.vibrate(p); } catch(e){} }
+const CUES = {start:['Starting. Keep your head still and look at the screen.', 660, [120]], half:['Halfway.', 880, [80,80,80]], done:['Done. You can lower the phone.', 990, [200]]};
+function cue(kind){
+  const c = CUES[kind]; tone(c[1], 220); buzz(c[2]); say(c[0]);
+  const el = document.getElementById('cue');
+  if (el) el.innerHTML = '<b>' + (S.check && S.check.self ? 'What you hear' : 'What the person holding the phone hears') + ':</b> “' + esc(c[0]) + '” (tone and vibration)';
+}
+
+/* ===== simulated capture, compressed for the demo ===== */
+let RUN = null;
+const SPEED = 8;
+function startRun(){
+  const tests = S.check.full ? FULL_TESTS : SIDELINE_TESTS;
+  const plan = tests.map(t => ({t, secs:TESTS[t].secs / SPEED}));
+  const total = plan.reduce((a, s) => a + s.secs, 0), realTotal = secsOf(tests), t0 = performance.now();
+  const token = {}; RUN = token; let half = false;
+  cue('start');
+  function frame(now){
+    if (RUN !== token) return;
+    const box = document.getElementById('runbox'); if (!box){ RUN = null; return; }
+    const t = (now - t0) / 1000;
+    if (t >= total){ RUN = null; finishRun(); return; }
+    if (!half && t >= total / 2){ half = true; cue('half'); }
+    let acc = 0, seg = plan[0], st = 0;
+    for (const s of plan){ if (t < acc + s.secs){ seg = s; st = t - acc; break; } acc += s.secs; }
+    const dot = document.getElementById('dot'), fl = document.getElementById('flash'), opt = document.getElementById('opt');
+    document.getElementById('runlabel').textContent = TESTS[seg.t].name;
+    document.getElementById('runcode').textContent = TESTS[seg.t].code;
+    document.getElementById('runclock').textContent = Math.max(0, Math.ceil(realTotal - t * SPEED)) + ' s left';
+    fl.style.opacity = 0; dot.hidden = true; opt.hidden = true;
+    const r = st / seg.secs;
+    if (seg.t === 'light-response' && [0.2, 0.47, 0.74].some(x => r > x && r < x + 0.05)) fl.style.opacity = 1;
+    if (seg.t === 'follow-the-dot'){ dot.hidden = false; dot.style.left = (50 + 38 * Math.sin(2 * Math.PI * 0.4 * st * SPEED)) + '%'; dot.style.top = '50%'; }
+    if (seg.t === 'hold-and-look'){ dot.hidden = false; dot.style.left = '50%'; dot.style.top = '50%'; }
+    if (seg.t === 'head-turn'){ opt.hidden = false; opt.style.transform = 'translate(-50%,-50%) rotate(' + (Math.floor(st * SPEED / 3) % 4) * 90 + 'deg)'; }
+    document.getElementById('runbar').style.width = (t / total * 100) + '%';
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+function finishRun(){
+  if (!S.check) return;
+  cue('done');
+  if (S.check.full){ S.check.phase = 'done'; render(); return; }
+  S.check.phase = 'scenario'; render();
+}
+
+/* ===== shared UI ===== */
+function phone(title, ctx, body, tabs, opts){
+  opts = opts || {};
+  const tab = S.signedIn && PERSONAS[S.persona].group === 'Clinician';
+  return '<div class="device' + (tab ? ' tablet' : '') + '">' + (tab ? '' : '<div class="notch"></div>') + '<div class="screen" data-team="' + teamOfPersona() + '">' +
+    '<div class="sbar"><span>' + (S.day === 0 ? '7:42' : '4:10') + '</span><span>5G ▮▮▮</span></div>' +
+    (opts.raw ? body : '<div class="appbar">' + title + '<div class="ctx">' + ctx + '</div>' + acctBtn() + '</div><div class="scroll">' + body + '</div>' + (tabs || '')) +
+    '</div></div><div class="cue" id="cue">' + (opts.cue || '') + '</div>';
+}
+function tabbar(persona, items){ const cur = S.tab[persona]; return '<nav class="tabbar">' + items.map(([id, label]) => '<button data-act="tab" data-arg="' + id + '"' + (cur === id ? ' aria-current="page"' : '') + '>' + (ICON[id] || '') + '<span>' + label + '</span></button>').join('') + '</nav>'; }
+function teamOfPersona(){ if (!S.signedIn) return 'brand'; const per = PERSONAS[S.persona]; if (per.kind === 'coach') return per.team; if (per.kind === 'player') return PLAYERS[per.player].team; return 'clinic'; }
+const ICON = {
+  roster:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.5c2.6 0 4.4 1.6 5 4.5"/></svg>',
+  baselines:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/></svg>',
+  cases:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>',
+  log:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+  today:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
+  progress:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M6 16v-4M11 16V8M16 16v-6M21 16V5"/></svg>',
+  steps:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4v-4h4v-4h4V8h4"/></svg>'
+};
+function ring(step, total){
+  const r = 42, c = 2 * Math.PI * r;
+  return '<svg class="ring" viewBox="0 0 100 100" role="img" aria-label="Step ' + step + ' of ' + total + '"><circle class="ring-bg" cx="50" cy="50" r="' + r + '"/><circle class="ring-fg" cx="50" cy="50" r="' + r + '" stroke-dasharray="' + (c * step / total).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 50 50)"/><text x="50" y="58" class="ring-n">' + step + '</text><text x="50" y="74" class="ring-l">of ' + total + '</text></svg>';
+}
+function streak(c){
+  const k = S.day - c.openedDay;
+  let h = '<div class="streak" aria-label="Daily checks">';
+  for (let i = 0; i <= k; i++){ const p = probAt(c, i); h += '<span class="sd ' + (p == null ? 'none' : p >= 0.75 ? 'hi' : p >= 0.40 ? 'mid' : 'clean') + '" title="Day ' + i + (p == null ? ': no check' : ': model ' + p.toFixed(2)) + '"></span>'; }
+  return h + '</div><div class="streak-key"><span><i style="background:var(--team2)"></i>No flags</span><span><i style="background:#FFD23F"></i>1–2 flags</span><span><i style="background:#FF7A1F"></i>3+ flags</span><span><i style="background:rgba(255,255,255,0.18)"></i>No check</span></div>';
+}
+const brandTitle = s => '<div><b>Sideline</b>' + (s ? '<div class="small muted">' + s + '</div>' : '') + '</div>';
+const backBtn = (act, label) => '<button class="back" data-act="' + act + '">‹ ' + (label || 'Back') + '</button>';
+const fmt = (b, v) => v == null ? '–' : (b.dp ? v.toFixed(b.dp) : Math.round(v)) + (b.unit ? ' ' + b.unit : '');
+const pfmt = p => p.toFixed(2);
+const plevel = p => p >= 0.75 ? 'High' : p >= 0.40 ? 'Moderate' : 'Low';
+
+function chainCard(b){
+  const t = TESTS[b.test];
+  return '<div class="chain">' +
+    '<div class="lnk"><span>SRC</span><span>' + t.sensors.map(s => esc(SENSORS[s][1]) + ' <span class="code">' + SENSORS[s][0] + '</span>').join(', ') + '</span></div>' +
+    '<div class="lnk"><span>TST</span><span>' + esc(t.name) + ' <span class="code">' + t.code + ' · ' + t.secs + ' s</span></span></div>' +
+    '<div class="lnk"><span>OBS</span><span>' + esc(OBS[b.obs][1]) + ' <span class="code">' + OBS[b.obs][0] + '</span></span></div>' +
+    '<div class="lnk"><span>CMP</span><span>' + (b.computers.length ? b.computers.map(esc).join(' → ') : '<i>No computer yet</i>') + '</span></div>' +
+    '<div class="lnk"><span>FTR</span><span>' + esc(b.id) + ' <span class="code">' + b.ftr + (b.planned ? ' · planned' : ' · computed') + '</span></span></div>' +
+    '<div class="lnk"><span>BMK</span><span>' + esc(b.name) + ' <span class="code">' + b.bmk + ' · ref ' + esc(b.ref) + '</span></span></div>' +
+    (b.domain ? '<div class="lnk"><span>MDL</span><span>' + esc(MODEL.id) + ', ' + b.domain.toLowerCase() + ' domain, flags ' + esc(b.rule) + '</span></div>' : '') +
+    '<div class="lnk"><span>CND</span><span>' + b.roles.map(esc).join(', ') + '</span></div></div>';
+}
+function bmkTable(cols){
+  const rows = BMK.map(b => {
+    const cell = (v) => b.planned ? '<td class="na">not built</td>' : '<td class="n' + (v != null && !b.inRef(v) ? ' out' : '') + '">' + fmt(b, v) + '</td>';
+    return '<tr><td>' + esc(b.name) + '<div class="code">' + b.bmk + ' · ' + TESTS[b.test].code + '</div></td><td class="n">' + esc(b.ref) + '</td><td class="n">' + (b.rule ? esc(b.rule) : '–') + '</td>' +
+      cols.map(c => cell(c.v ? c.v[b.id] : null)).join('') + '</tr>';
+  }).join('');
+  return '<div class="tw"><table class="m"><thead><tr><th>Biomarker</th><th>Catalog range</th><th>Model flag</th>' + cols.map(c => '<th>' + esc(c.label) + '</th>').join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+function modelCard(m, title){
+  return '<div class="card"><span class="label">' + (title || 'Model prediction') + '</span><div class="prob"><b>' + pfmt(m.p) + '</b><span>' + plevel(m.p) + ' · ' + m.n + ' of 4 domains flagged</span></div>' +
+    '<div class="small">' + m.domains.map(d => '<div>' + esc(d.b.domain) + ': ' + (d.status === 'flagged' ? '<b style="color:var(--remove)">flagged</b>' : esc(d.status)) + (d.value != null ? ' (' + fmt(d.b, d.value) + ')' : '') + '</div>').join('') + '</div>' +
+    '<p class="code">' + esc(MODEL.id) + ' · ' + MODEL.status + ' · ' + MODEL.validation + '</p></div>';
+}
+function probChart(c){
+  const st = cstate(c), n = st.k + 1, W = 300, H = 110, pl = 26, pb = 16, slots = Math.max(n, 8), bw = Math.min(20, (W - pl - 8) / slots - 4);
+  const x = i => pl + 4 + i * ((W - pl - 8) / slots);
+  let s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Model probability by day">';
+  [0.05, 0.40, 0.75].forEach(v => { const y = H - pb - v * (H - pb - 8); s += '<line class="axis" x1="' + pl + '" x2="' + W + '" y1="' + y + '" y2="' + y + '"/><text x="0" y="' + (y + 3) + '">' + v.toFixed(2) + '</text>'; });
+  for (let i = 0; i < n; i++){ const p = probAt(c, i); s += '<text x="' + (x(i) + 3) + '" y="' + (H - 3) + '">' + i + '</text>'; if (p == null) continue; const h = p * (H - pb - 8); s += '<rect class="bar' + (p >= 0.75 ? ' hi' : p <= 0.05 ? ' lo' : '') + '" x="' + x(i) + '" y="' + (H - pb - h) + '" width="' + bw + '" height="' + h + '"/>'; }
+  return s + '</svg>';
+}
+function saccadeChart(c, baseV){
+  const st = cstate(c), n = st.k + 1, W = 300, H = 120, pl = 26, pb = 16, lo = 280, hi = 500, slots = Math.max(n, 8);
+  const x = i => pl + 10 + i * ((W - pl - 16) / slots), y = v => H - pb - (v - lo) / (hi - lo) * (H - pb - 8);
+  let s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Fast eye movement speed by day">';
+  [300, 350, 400, 450].forEach(v => s += '<text x="0" y="' + (y(v) + 3) + '">' + v + '</text>');
+  s += '<line class="thr" x1="' + pl + '" x2="' + W + '" y1="' + y(350) + '" y2="' + y(350) + '"/>';
+  if (baseV) s += '<line class="base" x1="' + pl + '" x2="' + W + '" y1="' + y(baseV) + '" y2="' + y(baseV) + '"/>';
+  let path = '', pts = '';
+  for (let i = 0; i < n; i++){ s += '<text x="' + (x(i) - 2) + '" y="' + (H - 3) + '">' + i + '</text>'; const v = valuesAt(c, i); if (!v) continue; const cx = x(i), cy = y(v['saccade-peak-velocity-v1']); path += (path ? 'L' : 'M') + cx + ' ' + cy; pts += '<circle class="pt" cx="' + cx + '" cy="' + cy + '" r="3"/>'; }
+  return s + '<path class="line" d="' + path + '"/>' + pts + '</svg>';
+}
+function ladder(list, cur, kind, locked){
+  return '<div class="ladder">' + list.map((s, i) => { const n = i + 1, cls = n < cur ? 'done' : n === cur ? 'now' : (locked && locked(n) ? 'locked' : ''); return '<div class="step ' + cls + '"><span class="sn">' + n + '</span><div><b>' + esc(s[0]) + (n === cur ? ' · now' : '') + '</b><small>' + esc(kind === 'coach' ? s[2] : s[1]) + '</small></div></div>'; }).join('') + '</div>';
+}
+
+/* ===== sign in ===== */
+function acctBtn(){
+  if (!S.signedIn) return '';
+  const pp = PERSONAS[S.persona];
+  return '<button class="acct" data-act="signout" title="Signed in as ' + esc(pp.name) + '. Tap to sign out." aria-label="Sign out">' + (pp.player ? avatar(pp.player) : '<span class="ini">' + pp.ini + '</span>') + '</button>';
+}
+function loginView(){
+  const acc = Object.keys(PERSONAS).map(k => {
+    const pp = PERSONAS[k], face = pp.player ? avatar(pp.player) : '<span class="ini">' + pp.ini + '</span>';
+    return '<button class="row" data-act="signin" data-arg="' + k + '">' + face + '<span class="nm">' + esc(pp.name) + '<small>' + esc(pp.group) + ' · ' + esc(pp.role) + '</small></span>' + (pp.group === 'Clinician' ? '<span class="pill">iPad</span>' : '') + '</button>';
+  }).join('');
+  return phone('', '', '<div class="scroll">' +
+    '<div class="hero"><span class="jersey">S</span><span class="label">Sideline</span><h2>Spot it. Sit it out. Come back strong.</h2><p class="small">Concussion checks and comeback plans from your phone’s camera.</p></div>' +
+    '<button class="btn apple" data-act="toast" data-arg="Demo build: pick a demo account below.">Continue with Apple</button>' +
+    '<button class="btn" data-act="toast" data-arg="Demo build: pick a demo account below.">Continue with email</button>' +
+    '<span class="label">Demo accounts</span><p class="small muted">Each account is a different person signing in. Each sees only their own app.</p><div class="stack">' + acc + '</div></div>', '', {raw:true});
+}
+
+/* ===== coach app ===== */
+function rosterPill(pid){
+  const p = PLAYERS[pid], c = caseFor(pid);
+  if (c){ const st = cstate(c); if (st.closed) return '<span class="pill signed">Cleared ' + dshort(st.signed.day) + '</span>'; return '<span class="pill remove">Open case · step ' + st.rts + '</span>'; }
+  if (S.reports[pid] != null && S.day >= S.reports[pid] && S.day <= S.reports[pid] + 1) return '<span class="pill stop">Asked to be checked</span>';
+  if (pid === 'jalen' && (S.jb === 'flagged' || S.jb === 'retake')) return '<span class="pill remove">Baseline under review</span>';
+  if (!p.baseline) return '<span class="pill">No baseline · no consent</span>';
+  if (p.retake) return '<span class="pill">Baseline retake needed</span>';
+  return '<span class="pill">Baseline ' + p.baseline + '</span>';
+}
+const teamPlayers = team => Object.keys(PLAYERS).filter(id => PLAYERS[id].team === team);
+function coachApp(pid){
+  const per = PERSONAS[pid], team = per.team, T = TEAMS[team], v = S.view[pid] || {};
+  if (S.check) return checkFlow(pid);
+  const tabs = tabbar(pid, team === 'marcus' ? [['roster','Roster'],['baselines','Baselines'],['cases','Cases'],['log','Log']] : [['roster','Roster'],['cases','Cases'],['log','Log']]);
+  const ctx = esc(T.school) + '<br>' + esc(T.team);
+  if (v.caseOf) return phone(backBtn('close-case'), ctx, coachCase(v.caseOf), tabs);
+  if (v.how) return phone(backBtn('close-how'), ctx, howView(), tabs);
+  const tab = S.tab[pid];
+  let body = '';
+  if (tab === 'roster'){
+    const ids = teamPlayers(team);
+    const open = ids.filter(id => caseFor(id) && !cstate(caseFor(id)).closed).length;
+    const based = ids.filter(id => PLAYERS[id].baseline).length;
+    body += '<div class="hero"><span class="jersey">' + T.mark + '</span><span class="label">' + esc(T.school) + '</span><h2>' + esc(T.team) + '</h2><p class="small">' + (S.day === 0 ? T.event : S.day < 0 ? 'Preseason' : dlong(S.day)) + '</p><div class="hero-stats"><div><b>' + based + '/' + ids.length + '</b><span>Baselines</span></div><div><b>' + open + '</b><span>Open cases</span></div></div><div class="av-strip">' + ids.map(id => avatar(id)).join('') + '</div></div>';
+    body += '<button class="big-btn" data-act="check-start">Check a player</button>';
+    body += '<div class="chips"><span class="pill">' + esc(T.ruleShort) + '</span><button class="pill" style="border:none" data-act="how">How the check works</button></div>';
+    ids.forEach(id => { if (S.reports[id] != null && S.day >= S.reports[id] && S.day <= S.reports[id] + 1 && !caseFor(id)) body += '<div class="banner stop"><b>' + esc(PLAYERS[id].name) + ' asked to be checked.</b> ' + cap(sub(PLAYERS[id])) + ' says ' + esc(S.selfReport[id] || 'something feels wrong') + '. Check ' + obj(PLAYERS[id]) + ' before ' + sub(PLAYERS[id]) + ' plays again.</div>'; });
+    body += '<div class="stack">' + ids.map(id => { const p = PLAYERS[id]; return '<button class="row" data-act="roster-tap" data-arg="' + id + '">' + avatar(id) + '<span class="nm">' + esc(p.name) + '<small>' + tag(p) + '</small></span>' + rosterPill(id) + '</button>'; }).join('') + '</div>';
+    if (team === 'marcus') body += '<p class="small muted">Showing men’s basketball. Athletic trainers see every team they cover.</p>';
+  }
+  if (tab === 'baselines') body += baselinesView();
+  if (tab === 'cases'){
+    const ids = teamPlayers(team).filter(id => caseFor(id));
+    body += '<h3>Concussion cases</h3>';
+    body += ids.length ? '<div class="stack">' + ids.map(id => { const st = cstate(caseFor(id)); return '<button class="row" data-act="open-case" data-arg="' + id + '">' + avatar(id) + '<span class="nm">' + esc(PLAYERS[id].name) + '<small>' + (st.closed ? 'Closed ' + dshort(st.signed.day + 1) : 'Day ' + st.k + ' · ' + esc(RTS[st.rts - 1][0])) + '</small></span>' + rosterPill(id) + '</button>'; }).join('') + '</div>'
+      : '<div class="card"><p class="muted">No cases. A case opens when a player is removed after a check, or 911 is called.</p></div>';
+  }
+  if (tab === 'log'){
+    const items = S.log.filter(l => l.team === team && l.day <= S.day).slice().reverse();
+    body += '<h3>School record</h3><p class="small muted">Timestamped and read-only.</p>' + items.map(l => '<div class="card"><p class="small muted">' + esc(l.when) + '</p><p class="small">' + esc(l.text) + '</p></div>').join('') + '<button class="btn" data-act="send-log">Send record to athletic director</button>';
+  }
+  return phone(brandTitle(team === 'marcus' ? 'Athletic trainer' : 'Coach'), ctx, body, tabs);
+}
+function howView(){
+  let h = '<h3>How the sideline check works</h3><p class="small">Nothing is asked of the player. The phone measures, and a model decides.</p>';
+  h += SIDELINE_TESTS.map(t => { const T = TESTS[t], bs = BMK.filter(b => b.test === t); return '<div class="card"><span class="label">' + T.code + ' · ' + T.secs + ' s</span><h3>' + esc(T.name) + '</h3><p class="small">' + esc(T.says) + '</p><p class="small muted">Measures: ' + bs.map(b => esc(b.name)).join(', ') + '</p></div>'; }).join('');
+  h += '<div class="card"><h3>What decides the result</h3><ul class="plain small"><li><b>Call 911:</b> pupil size difference over 1 mm (red flag in CND-00260).</li><li><b>Remove from play:</b> model probability 0.40 or higher, or a pupil measure required by CND-00066 outside its catalog range.</li><li><b>No change detected:</b> probability 0.05 and pupils in range.</li><li><b>Could not measure:</b> the computers returned no value because capture quality was too low.</li></ul><p class="code">' + esc(MODEL.id) + ' · ' + MODEL.status + ' · ' + MODEL.validation + '</p></div>';
+  return h;
+}
+function coachCase(pid){
+  const p = PLAYERS[pid], c = caseFor(pid); if (!c) return '<p class="muted">No case.</p>';
+  const st = cstate(c);
+  let h = '<div class="hero-id">' + avatar(pid, 'av-md') + '<div><h2 style="font-family:var(--f-display);font-size:1.75rem;font-weight:800;font-style:italic">' + esc(p.name) + '</h2><p class="small muted">' + tag(p) + ' · ' + (st.closed ? 'Case closed' : 'Open case · day ' + st.k) + '</p></div></div>';
+  if (c.second) h += '<div class="banner remove">Second hit during recovery on ' + dshort(c.openedDay) + '. The case restarted at step 1.</div>';
+  h += '<div class="card"><span class="label">Today at practice · step ' + st.rts + ' of 6</span><p style="font-weight:700;font-size:1.0625rem">' + esc(RTS[st.rts - 1][2]) + '</p><p class="small muted">' + esc(st.why) + '</p></div>';
+  if (st.signed) h += '<div class="banner signed"><b>Cleared for full-contact practice</b> by ' + esc(st.signed.name) + ', ' + esc(st.signed.credLabel) + ', on ' + dshort(st.signed.day) + '. Games from ' + dshort(st.signed.day + 1) + '.</div>';
+  else if (st.ready) h += '<div class="banner">Ready for clinician review since ' + dshort(st.readySince) + '. ' + (st.shared != null || TEAMS[p.team].clinic ? 'The clinician has the report.' : 'Waiting for the family to share the report with their doctor.') + '</div>';
+  else h += '<div class="banner">Needs written clearance before full-contact practice. ' + esc(TEAMS[p.team].rule) + '</div>';
+  h += '<div class="card"><span class="label">Return to sport</span>' + ladder(RTS, st.rts, 'coach') + '</div>';
+  const tl = [[dshort(c.openedDay) + ', ' + c.time, ({emergency:'911 called after the check. ', observed:'911 called. ', remove:'Removed after the check. ', suspected:'Removed on suspicion. '}[c.outcome]) + 'By ' + esc(c.by) + '. ' + (p.adult ? 'Athlete and team physician notified.' : 'Parent texted.')]];
+  if (st.shared != null) tl.push([dshort(st.shared), 'Family shared the report with Dr. Elena Ruiz.']);
+  st.reviews.forEach(r => tl.push([dshort(r.day), esc(r.name) + ': ' + (r.decision === 'notyet' ? 'not yet, continue at step 4.' : 'referred to a specialist.')]));
+  if (st.signed) tl.push([dshort(st.signed.day), 'Cleared for full-contact practice by ' + esc(st.signed.name) + '.']);
+  h += '<div class="card"><span class="label">Timeline</span>' + tl.map(t => '<p class="small"><span class="muted">' + t[0] + '</span><br>' + t[1] + '</p>').join('') + '</div>';
+  h += '<p class="small muted">Measurements are shared only with the player, ' + (p.adult ? 'and the team physician' : 'their parent, and their clinician') + '. Only a clinician can close this case.</p>';
+  return h;
+}
+function baselinesView(){
+  let h = '<h3>Baselines · Chesapeake State</h3><div class="card"><div class="tw"><table class="m"><thead><tr><th>Team</th><th>Recorded</th><th>Needs action</th></tr></thead><tbody>' +
+    [['Men’s basketball','14 / 15','2'],['Women’s basketball','15 / 15','0'],['Women’s soccer','26 / 27','1'],['Lacrosse','41 / 44','3'],['Wrestling','30 / 31','1']].map(r => '<tr><td>' + r[0] + '</td><td class="n">' + r[1] + '</td><td class="n">' + r[2] + '</td></tr>').join('') +
+    '</tbody></table></div><span class="sample">Demo data</span></div><span class="label">Needs your review</span>';
+  if (S.jb === 'flagged'){
+    const m = runModel(BASE_JALEN_LOW), outs = REQ66.concat([B['plr-latency-v1'], B['constriction-velocity-v1']]).filter(b => !b.inRef(BASE_JALEN_LOW[b.id]));
+    h += '<div class="card"><h3>Jalen Brooks #3</h3><p class="small">Recorded Aug 14 with good capture quality, but the baseline already trips the concussion model (' + m.n + ' domain flagged, probability ' + pfmt(m.p) + ') and ' + outs.length + ' pupil measures are outside the catalog range. A healthy athlete should not look like this. It often means the baseline was not done with full effort, which would hide a real injury later.</p>' +
+      '<details><summary>See the baseline</summary>' + bmkTable([{label:'Aug 14', v:BASE_JALEN_LOW}]) + '</details>' +
+      '<button class="btn ink" data-act="jb" data-arg="retake">Ask Jalen to retake</button><button class="btn" data-act="jb" data-arg="accepted">Accept as is</button></div>';
+  } else if (S.jb === 'retake') h += '<div class="card"><h3>Jalen Brooks #3</h3><p class="small">Retake requested. Jalen sees it in his app.</p></div>';
+  else h += '<div class="card"><h3>Jalen Brooks #3</h3><p class="small">' + (S.jb === 'good' ? 'Retake done. No model flags, all measures within catalog ranges.' : 'Accepted as is. Jalen’s baseline stays marked as low effort for anyone reading his results.') + '</p></div>';
+  h += '<div class="card"><h3>Eli Becker #44</h3><p class="small">Capture failed on 2 of 4 tests (glare), so no values were computed. Asked to retake in indoor light.</p></div>';
+  return h;
+}
+
+/* ===== check flow ===== */
+function checkFlow(pid){
+  const ch = S.check, team = PERSONAS[pid].team;
+  const p = ch.player ? PLAYERS[ch.player] : null;
+  const sos = ch.full ? '' : '<button class="sos" data-act="sos">Call 911</button>';
+  const head = '<div class="appbar"><button class="back" data-act="check-cancel">Cancel</button>' + sos + '<div class="ctx">' + (p ? esc(p.name) : '') + '<br>' + (ch.full ? 'Full check' : 'Sideline check') + '</div></div>';
+  const wrap = body => phone('', '', head + '<div class="scroll">' + body + '</div>', '', {raw:true});
+  if (ch.phase === 'pick'){
+    const ids = (ch.pool || teamPlayers(team)).slice().sort((a, b) => (b === 'priya' || b === 'jalen') - (a === 'priya' || a === 'jalen'));
+    return wrap('<h3>Who are you checking?</h3>' + '<div class="stack">' + ids.map(id => '<button class="row" data-act="check-player" data-arg="' + id + '">' + avatar(id) + '<span class="nm">' + esc(PLAYERS[id].name) + '</span>' + rosterPill(id) + '</button>').join('') + '</div>');
+  }
+  if (ch.phase === 'sos'){
+    return wrap('<div class="hero-result stop"><span class="label">Emergency</span><h2>Call 911 now.</h2><div class="bignum">911</div></div>' +
+      '<div class="card"><h3>Call 911 for any of these</h3><ul class="plain small"><li>Seizure</li><li>Knocked out, or getting drowsy and hard to wake</li><li>Vomiting more than once</li><li>Cannot move an arm or leg, or numbness</li><li>Neck pain after the hit. Do not move the player.</li></ul><p class="small muted">These are things you can see. The phone can’t measure them, and the player should not be tested while they happen.</p></div>' +
+      '<button class="btn solid-stop" data-act="log-observed">I’ve called 911. Log it and notify ' + notifyWho(p) + '</button>');
+  }
+  if (ch.phase === 'setup'){
+    const tests = ch.full ? FULL_TESTS : SIDELINE_TESTS, secs = secsOf(tests);
+    let b = '';
+    const c = caseFor(ch.player);
+    if (!ch.full && c && !cstate(c).closed) b += '<div class="banner remove"><b>' + esc(p.first) + ' has an open concussion case</b> (day ' + cstate(c).k + ', step ' + cstate(c).rts + '). ' + cap(sub(p)) + ' should not be in contact play.</div>';
+    if (!ch.full && !p.baseline) b += '<div class="banner">No baseline on file for ' + esc(p.first) + '. The result uses catalog thresholds, so it still works. You just won’t see a before-and-after.</div>';
+    b += '<h3>' + (ch.full ? (ch.purpose === 'baseline' ? 'Record your baseline' : ch.purpose === 'clinic' ? 'In-clinic check' : 'Today’s check') : 'Set up the check') + '</h3>';
+    if (ch.full) b += '<ol class="plain small"><li>Sit in even indoor light. No bright window behind or in front of you.</li><li>Glasses off if you can. Contacts are fine.</li><li>Hold the phone at arm’s length, screen toward your face.</li><li>Keep your head still unless the screen asks you to move it.</li></ol>';
+    else b += '<ol class="plain small"><li>Move out of direct sun. Shade, or your back to the sun.</li><li>Helmet and headgear off.</li><li>Hold the phone at arm’s length, <b>screen toward ' + esc(p.first) + '</b>.</li><li>Tell ' + esc(p.first) + ': “Keep your head still and watch the screen.”</li></ol><div class="banner">You won’t see the screen. A tone and a buzz mark the start, halfway, and the end.</div>';
+    b += '<div class="card"><span class="label">' + tests.length + ' tests · ' + Math.round(secs / 60 * 10) / 10 + ' minutes</span>' + tests.map(t => '<p class="small">' + esc(TESTS[t].name) + ' <span class="code">' + TESTS[t].code + ' · ' + TESTS[t].secs + ' s</span>' + (t === 'head-turn' ? '<br><span class="muted">Recorded now. Its feature (FTR-00162) is not built yet, so it doesn’t affect results.</span>' : '') + '</p>').join('') + '</div>';
+    if (ch.purpose === 'baseline') b += '<p class="small muted">Do your best on every part. A baseline that looks impaired gets flagged and has to be redone.</p>';
+    b += '<button class="big-btn" data-act="run">Start</button><p class="small muted">The demo runs ' + SPEED + ' times faster than real time.</p>';
+    return wrap(b);
+  }
+  if (ch.phase === 'run') return phone('', '', '<div class="runbox" id="runbox"><div class="flash" id="flash"></div><div class="dot" id="dot" hidden></div><div class="opt" id="opt" hidden>E</div><div class="run-top"><div><b id="runlabel">Get ready</b><div class="code" id="runcode" style="color:var(--run-ink)"></div></div><span>' + (p ? esc(p.first) : '') + '</span></div>' + (ch.full ? '' : '<button class="sos run-sos" data-act="sos">Call 911</button>') + '<div class="run-bot"><div class="track"><i id="runbar"></i></div><div class="rb"><span id="runclock"></span><button class="skip" data-act="skip">Skip (demo)</button></div></div></div>', '', {raw:true});
+  if (ch.phase === 'scenario'){
+    return wrap('<div class="banner"><b>Demo data.</b> A real check computes values from the camera. Pick what happened to ' + esc(p.first) + ', and the app runs the graph on matching demo values.</div><div class="stack">' + Object.keys(SCEN).map(k => '<button class="row" data-act="scenario" data-arg="' + k + '"><span class="nm">' + esc(SCEN[k].label) + '</span></button>').join('') + '</div>');
+  }
+  if (ch.phase === 'result') return wrap(resultView(ch, p));
+  if (ch.phase === 'done'){
+    let b = '';
+    if (ch.purpose === 'baseline'){ const m = runModel(BASE_JALEN_RETAKE); b += '<div class="hero-result steady"><span class="label">Baseline saved</span><h2>No model flags. All measures in range.</h2><p class="small">Probability ' + pfmt(m.p) + '. Marcus can see it.</p></div>' + bmkTable([{label:'Today', v:BASE_JALEN_RETAKE}]); }
+    else if (ch.purpose === 'clinic') b += '<div class="hero-result steady"><span class="label">Saved to case</span><h2>Check added to ' + esc(p.name) + '’s case</h2></div>';
+    else { const c = caseFor(ch.player), st = cstate(c); b += st.model ? '<div class="hero-result steady"><span class="label">Today’s check saved</span><h2>' + st.model.n + ' of 4 domains flagged</h2><p class="small">Model probability ' + pfmt(st.model.p) + '. Your steps update from this tomorrow.</p></div>' : ''; }
+    b += '<span class="sample">Demo data</span><button class="btn ink" data-act="check-finish">Done</button>';
+    return wrap(b);
+  }
+  return wrap('');
+}
+function resultView(ch, p){
+  const r = ch.result, v = ch.values, base = baselineOf(ch.player);
+  const cols = [{label:'Now', v}].concat(base ? [{label:'Baseline', v:base}] : []);
+  const proof = '<details class="card"><summary>All measurements</summary>' + bmkTable(cols) + '<span class="sample">Demo data</span></details>';
+  if (r.outcome === 'fail'){
+    const left = 2 - (ch.retries || 0);
+    const gone = BMK.filter(b => !b.planned && v[b.id] == null).map(b => b.name);
+    return '<div class="hero-result fail"><span class="label">Result</span><h2>Could not measure.</h2><p class="small">Too much light reached the camera, or the phone moved. These computers returned no value: ' + esc(gone.join(', ')) + '.</p></div>' +
+      '<div class="card"><h3>Try again</h3><ul class="plain small"><li>Move into shade or turn your back to the sun.</li><li>Brace your elbows against your body.</li></ul></div>' +
+      (left > 0 ? '<button class="btn ink" data-act="retry">Retry (' + left + ' left)</button>' : '<div class="banner">No retries left. Treat this as a suspected concussion.</div>') +
+      '<button class="btn solid-remove" data-act="log-case" data-arg="suspected">Remove as suspected concussion</button>';
+  }
+  const m = r.model;
+  if (r.outcome === 'emergency'){
+    return '<div class="hero-result stop"><span class="label">Emergency</span><h2>Call 911 now.</h2><div class="bignum">911</div></div>' +
+      '<div class="card"><h3>Why</h3><p class="small">Pupil size difference is ' + fmt(B['pupil-asymmetry-v1'], v['pupil-asymmetry-v1']) + (base ? ' (baseline ' + fmt(B['pupil-asymmetry-v1'], base['pupil-asymmetry-v1']) + ')' : '') + '. Over 1 mm after a head injury is a red flag for bleeding in the brain (CND-00260).</p><p class="code">BMK-00075 · TST-00006</p></div>' +
+      '<div class="card"><h3>While you wait</h3><ul class="plain small"><li>Stay with ' + esc(p.first) + '.</li><li>If the neck may be hurt, do not move ' + obj(p) + '.</li><li>No food, drink, or medicine.</li></ul></div>' +
+      '<button class="btn solid-stop" data-act="log-case" data-arg="emergency">I’ve called 911. Log it and notify ' + notifyWho(p) + '</button>' + proof;
+  }
+  if (r.outcome === 'remove'){
+    const flaggedIds = m.domains.filter(d => d.flagged).map(d => d.b.id);
+    const lines = m.domains.filter(d => d.flagged).map(d => '<li>' + esc(d.b.plain(d.value)) + ' <span class="code">' + d.b.bmk + '</span></li>').concat(r.outReq.filter(b => !flaggedIds.includes(b.id)).map(b => '<li>' + esc(b.name) + ' was ' + fmt(b, v[b.id]) + ', outside the catalog range ' + esc(b.ref) + '. <span class="code">' + b.bmk + '</span></li>')).join('');
+    return '<div class="hero-result remove"><span class="label">Result</span><h2>Remove from play.</h2><p>Get ' + esc(p.first) + ' evaluated by a healthcare provider today.</p></div>' +
+      modelCard(m) + '<div class="card"><h3>What the phone found</h3><ul class="plain small">' + lines + '</ul></div>' + proof +
+      '<p class="small muted">This is a screening result, not a diagnosis.</p><button class="btn solid-remove" data-act="log-case" data-arg="remove">Log removal and notify ' + notifyWho(p) + '</button>';
+  }
+  return '<div class="hero-result steady"><span class="label">Result</span><h2>No change detected.</h2><p>The model found no flags. <b>This does not rule out a concussion.</b></p></div>' + modelCard(m) +
+    '<div class="card"><h3>Remove ' + esc(p.first) + ' anyway if you see</h3><ul class="plain small"><li>Holding the head, stumbling, or slow to get up</li><li>Confused about the score, the play, or the opponent</li><li>Anything that looks different from normal</li></ul><p class="small muted">Run the check again at halftime and after the game.</p></div>' + proof +
+    '<button class="btn solid-remove" data-act="log-case" data-arg="suspected">Remove anyway</button><button class="btn" data-act="keep">Keep watching. Don’t remove</button>';
+}
+
+/* ===== player app ===== */
+function playerApp(pid){
+  const p = PLAYERS[pid], v = S.view[pid] || {};
+  if (S.check) return checkFlow(pid);
+  const ctx = esc(p.name) + '<br>' + esc(TEAMS[p.team].school);
+  const tabs = tabbar(pid, [['today','Today'],['progress','Progress'],['steps','Steps']]);
+  if (v.report) return phone(backBtn('close-report'), ctx, selfReportView(pid), tabs);
+  const c = caseFor(pid), tab = S.tab[pid];
+  let b = '';
+  if (tab === 'today') b = todayView(pid, c);
+  if (tab === 'progress'){
+    if (!c) b = '<div class="card"><h3>Nothing to show</h3><p class="muted small">Progress shows here if you have an open concussion case.</p></div>';
+    else { const st = cstate(c), base = baselineOf(pid);
+      b = '<h3>Your progress</h3><span class="sample">Demo data</span>' +
+        '<div class="card"><h3>Concussion model, by day</h3><p class="small muted">0.75 means 3 or more problem areas, 0.40 means 1 or 2, 0.05 means none. Day 1 had no check.</p>' + probChart(c) + '</div>' +
+        '<div class="card"><h3>Fast eye movement speed</h3><p class="small muted">Red dashes: the model’s 350 line. Blue dots: your baseline.</p>' + saccadeChart(c, base && base['saccade-peak-velocity-v1']) + '</div>' +
+        (st.v ? '<details class="card"><summary>Today’s measurements</summary>' + bmkTable([{label:'Today', v:st.v}].concat(base ? [{label:'Baseline', v:base}] : [])) + '</details>' : ''); }
+  }
+  if (tab === 'steps'){
+    if (!c) b = '<div class="card"><h3>No open case</h3><p class="small muted">If you’re removed after a hit, your return-to-school and return-to-sport steps show here.</p></div>';
+    else { const st = cstate(c);
+      b = '<div class="banner">' + esc(st.why) + '</div><h3>Back to school</h3>' + ladder(RTL, st.rtl, 'player') + '<h3>Back to sport</h3>' + ladder(RTS, st.rts, 'player', n => n >= 4 && st.rtl < 4 || n >= 5 && !st.signed) +
+      '<div class="card"><h3>How your steps move</h3><ul class="plain small"><li>Your daily check decides, not how you say you feel.</li><li>A check with no flags moves you up one step the next day.</li><li>A check with 3 or more flags moves you back one step.</li><li>Steps 4 to 6 wait until you’re back at school full time.</li><li>A clinician signs off before step 5. ' + (p.adult ? 'The NCAA protocol requires it.' : 'Maryland law requires it.') + '</li></ul></div>'; }
+  }
+  return phone(brandTitle('Player'), ctx, b, tabs);
+}
+function todayView(pid, c){
+  const p = PLAYERS[pid];
+  let b = '<div><span class="label">Today</span><h2 style="font-family:var(--f-display);font-size:1.75rem;font-weight:700">' + dlong(S.day) + '</h2></div>';
+  if (S.day < 0){
+    if (pid === 'jalen'){
+      if (S.jb === 'retake') b += '<div class="card"><h3>Marcus asked you to retake your baseline</h3><p class="small">Your first one looked like an injured athlete’s. If your baseline is low, a real concussion later can look normal, and you could get hurt worse.</p><button class="big-btn" data-act="full-check" data-arg="baseline">Record baseline again</button></div>';
+      else if (S.jb === 'flagged') b += '<div class="card"><h3>Baseline recorded Aug 14</h3><p class="small muted">Your athletic trainer is reviewing it.</p></div>';
+      else b += '<div class="card"><h3>Baseline recorded</h3><p class="small muted">' + (S.jb === 'good' ? 'Retaken ' + dshort(S.day) + '. No flags.' : 'Recorded Aug 14.') + '</p></div>';
+    } else b += '<div class="card"><h3>Baseline recorded Aug 18</h3><p class="small muted">No flags. Your coach sees that it’s done, not the numbers.</p></div>';
+    b += '<div class="card"><h3>What Sideline does</h3><p class="small">After a hit, your coach runs a 2-minute check. Your phone measures your pupils and eye movements, and a model decides. It never clears you to play. A clinician does that.</p></div>';
+    return b;
+  }
+  if (!c){
+    b += '<div class="hero"><span class="jersey">' + (p.num || '') + '</span><div class="hero-id">' + avatar(pid, 'av-lg') + '<div><span class="label">' + tag(p) + ' · ' + esc(TEAMS[p.team].team) + '</span><h2>' + esc(p.first) + '</h2></div></div><p class="small">' + (p.baseline ? 'Baseline on file from ' + esc(p.baseline) + '. No open case.' : 'No baseline yet.') + '</p></div>';
+    b += '<div class="card"><h3>Something feel wrong after a hit?</h3><p class="small">Ask to be checked. The check decides, so you won’t be benched just for asking.</p><button class="big-btn" data-act="self-report">Ask ' + (p.team === 'marcus' ? 'Marcus' : 'Coach Whitfield') + ' to check me</button></div>';
+    if (S.reports[pid] != null && S.day >= S.reports[pid] && S.day <= S.reports[pid] + 1) b += '<div class="banner signed">Sent on ' + dshort(S.reports[pid]) + '.</div>';
+    return b;
+  }
+  const st = cstate(c), key = pid + ':' + S.day;
+  if (st.closed){ b += '<div class="banner signed"><b>Your case is closed.</b> Back to full play from ' + dshort(st.signed.day + 1) + '.</div>'; return b; }
+  b += '<div class="hero"><span class="jersey">' + (p.num || '') + '</span><div class="hero-id">' + avatar(pid, 'av-md') + '<div><span class="label">Comeback plan · day ' + st.k + (c.second ? ' · restarted' : '') + '</span><h2>' + esc(p.first) + '</h2></div></div><div class="hero-row">' + ring(st.rts, 6) + '<div><span class="label">Sport step</span><div class="hero-step">' + esc(RTS[st.rts - 1][0]) + '</div><p class="small">' + esc(st.why) + '</p></div></div>' + streak(c) + '</div>';
+  if (st.k === 0) b += '<div class="card"><h3>Your recovery has started</h3><p class="small">You were removed from play today. Rest tonight. ' + (p.adult ? 'Don’t stay alone tonight. Call 911' : 'Tell an adult right away') + ' if your headache gets worse, you keep throwing up, or you feel very sleepy.</p></div>';
+  if (st.signed) b += '<div class="banner signed"><b>' + esc(st.signed.name) + ' cleared you for full-contact practice</b> on ' + dshort(st.signed.day) + '. Games from ' + dshort(st.signed.day + 1) + '.</div>';
+  else if (st.ready){
+    if (pid === 'priya'){
+      if (st.shared != null){ const last = st.reviews[st.reviews.length - 1]; b += '<div class="banner">Shared with Dr. Elena Ruiz on ' + dshort(st.shared) + '. ' + (last ? 'Her note: ' + (last.decision === 'notyet' ? 'not yet. Stay at step 4 for now.' : 'she referred you to a specialist.') : 'Waiting for her review.') + '</div>'; }
+      else b += '<div class="card"><h3>Ready for a clinician’s review</h3><p class="small">Two checks in a row with no flags and pupils in range. A clinician now decides about full contact.</p><button class="big-btn" data-act="share">Share report with Dr. Elena Ruiz</button><p class="small muted">Linden Pediatrics. Your parent can share it with a different doctor instead.</p></div>';
+    } else b += '<div class="banner">Two clean checks in a row. Dr. Tom Okafor, the team physician, has your case and will review it.</div>';
+  }
+  const dc = S.dailyDone[key];
+  b += '<div class="card"><span class="label">Today</span>' + (st.k >= 2 ? '<button class="row" data-act="full-check" data-arg="daily"><span class="nm">Daily check<small>' + FULL_TESTS.length + ' tests, about ' + Math.round(secsOf(FULL_TESTS) / 60) + ' minutes</small></span><span class="pill' + (dc ? ' signed' : '') + '">' + (dc ? 'Done' : 'To do') + '</span></button>' : '<p class="small muted">No check today. Rest is part of recovery. Daily checks start on day 2.</p>') + '</div>';
+  b += '<div class="card"><span class="label">You can</span><p class="small"><b>School:</b> ' + esc(RTL[st.rtl - 1][1]) + '</p><p class="small"><b>Sport, step ' + st.rts + ':</b> ' + esc(RTS[st.rts - 1][1]) + '</p><p class="small muted">' + esc(st.why) + '</p></div>';
+  return b;
+}
+function selfReportView(pid){
+  const opts = ['Headache','Dizzy','Blurry or double vision','Foggy','Sick to my stomach','Something else'];
+  return '<h3>Ask to be checked</h3><p class="small muted">Optional: say what’s going on. It goes to your ' + (PLAYERS[pid].team === 'marcus' ? 'trainer' : 'coach') + ' right away. The check decides what happens next.</p><div class="card check-list">' + opts.map((o, i) => '<label for="sr' + i + '"><input type="checkbox" id="sr' + i + '" value="' + esc(o) + '"> ' + esc(o) + '</label>').join('') + '</div><button class="big-btn" data-act="send-report">Send</button>';
+}
+
+/* ===== clinician ===== */
+function reportView(pid, viewer){
+  const p = PLAYERS[pid], c = caseFor(pid), st = cstate(c), T = TEAMS[p.team], base = baselineOf(pid);
+  let h = '<div><span class="label">Concussion recovery report · for clinician review</span><h1>' + esc(p.name) + '</h1><p class="small muted">' + esc(T.school) + ' · ' + esc(T.team) + ' · generated ' + dlong(S.day) + ' · ' + SNAPSHOT + '</p></div>';
+  h += '<div class="rgrid"><div class="card"><span class="label">Injury</span><p class="small">' + dlong(c.openedDay) + ', ' + c.time + '<br>' + ({emergency:'911 called: pupil asymmetry over 1 mm', observed:'911 called for a sign staff saw', remove:'Removed: model ' + pfmt(runModel(c.d0).p) + ' on the sideline check', suspected:'Removed on staff suspicion'}[c.outcome]) + '<br>By ' + esc(c.by) + '</p></div>' +
+    '<div class="card"><span class="label">Now</span><p class="small">Day ' + st.k + '<br>School: ' + esc(RTL[st.rtl - 1][0]) + '<br>Sport: step ' + st.rts + ', ' + esc(RTS[st.rts - 1][0]) + '</p></div>' +
+    (st.model ? modelCard(st.model, 'Model today') : '<div class="card"><span class="label">Model today</span><p class="small">No check today.</p></div>') + '</div>';
+  h += '<div class="card"><h2>Biomarkers</h2>' + bmkTable([{label:'Day 0', v:c.d0}, {label:'Today', v:st.v}].concat(base ? [{label:'Baseline', v:base}] : [])) + '<span class="sample">Demo data</span></div>';
+  h += '<div class="rgrid"><div class="card"><h2>Model by day</h2>' + probChart(c) + '</div><div class="card"><h2>Saccade velocity by day</h2>' + saccadeChart(c, base && base['saccade-peak-velocity-v1']) + '</div></div>';
+  h += '<details class="card"><summary>How each value was measured (knowledge graph chain)</summary>' + BMK.map(b => '<div class="card"><h3>' + esc(b.name) + '</h3>' + chainCard(b) + '</div>').join('') + '</details>';
+  h += '<div class="card"><h2>Limits</h2><ul class="plain small"><li>' + esc(MODEL.id) + ' is ' + MODEL.status + ' and ' + MODEL.validation + '. Expected AUC ' + esc(MODEL.auc) + '. Thresholds come from the literature, not an OculoDx cohort.</li><li>The vestibular domain cannot flag yet: gaze-stabilization-max-head-velocity-v1 (FTR-00162) is planned, with no computer.</li><li>Decisions use catalog thresholds. The athlete’s baseline is shown for context only. The graph has no baseline-relative model yet.</li><li>Sideline does not use athlete self-report for decisions. Assess symptoms in your exam.</li><li>Not reviewed by the FDA.</li></ul></div>';
+  if (st.signed) return h + '<div class="banner signed"><b>Signed ' + dshort(st.signed.day) + '</b> by ' + esc(st.signed.name) + ', ' + esc(st.signed.credLabel) + ', licence ' + esc(st.signed.lic) + '. Cleared for full-contact practice (step 5).</div>';
+  if (!st.ready) return h + '<div class="banner">Not ready for review. Unlocks after two checks in a row with no model flags and pupils in range, with step 4 completed.</div>';
+  return h + '<div class="card"><h2>Your decision</h2><p class="small muted">' + esc(TEAMS[p.team].rule) + ' Your name, credential, licence number and this report version are recorded.</p>' +
+    '<div class="form"><label class="field" for="so-name">Your name<input id="so-name" value="' + (viewer === 'ruiz' ? 'Elena Ruiz' : 'Tom Okafor') + '"></label>' +
+    '<label class="field" for="so-cred">Credential<select id="so-cred"><option value="md" selected>Physician (MD or DO)</option><option value="pa">Physician assistant, under a physician</option><option value="np">Nurse practitioner, under a physician</option><option value="at">Athletic trainer</option></select></label>' +
+    '<label class="field" for="so-lic">Licence number<input id="so-lic" placeholder="e.g. D0084213"></label></div>' +
+    '<div class="radios" role="radiogroup" aria-label="Decision"><label for="dec-clear"><input type="radio" name="so-dec" id="dec-clear" value="clear" checked> Cleared for full-contact practice (step 5). Games from the next day.</label><label for="dec-notyet"><input type="radio" name="so-dec" id="dec-notyet" value="notyet"> Not yet. Continue at step 4.</label><label for="dec-refer"><input type="radio" name="so-dec" id="dec-refer" value="refer"> Refer to a concussion specialist.</label></div>' +
+    (S.signErr ? '<p class="err">' + esc(S.signErr) + '</p>' : '') + '<button class="btn ink" style="max-width:16rem" data-act="sign" data-arg="' + pid + '">Sign and send</button></div>';
+}
+const browser = (url, body, app) => phone('', '', (app
+  ? '<div class="appbar"><div><b>Sideline Clinic</b><div class="small muted">Chesapeake State Sports Medicine</div></div><div class="ctx">Dr. Tom Okafor, team physician</div>' + acctBtn() + '</div>'
+  : '<div class="ipadbar"><span class="small muted">Safari</span><div class="url">' + esc(url) + '</div>' + acctBtn() + '</div>') +
+  '<div class="scroll"><div class="bbody">' + body + '</div></div>', '', {raw:true});
+function ruizView(){
+  const c = caseFor('priya'), st = c ? cstate(c) : null;
+  if (!c || st.shared == null) return browser('sideline.health/clinician', '<h1>Shared reports</h1><div class="card"><p>No reports have been shared with you yet.</p><p class="small muted">Dr. Ruiz has no account. She opens a secure link on her iPad when a family shares a report, once the athlete has two clean checks in a row.</p></div>');
+  return browser('sideline.health/r/PN-7KQ2', reportView('priya', 'ruiz'));
+}
+function okaforView(){
+  if (S.openReport) return browser('', '<button class="linkbtn" data-act="close-okreport">‹ All cases</button>' + reportView(S.openReport, 'okafor'), true);
+  const live = teamPlayers('marcus').filter(id => caseFor(id)).map(id => { const st = cstate(caseFor(id)); return {id, name:PLAYERS[id].name, school:'Men’s basketball', day:st.k, step:st.rts, model:st.model ? pfmt(st.model.p) : '–', need:st.closed ? 'Closed' : st.signed ? 'Cleared' : st.ready ? 'Ready for review' : st.k === 0 ? 'New case today' : st.model && st.model.p >= 0.75 ? '3+ flags' : 'Recovering', rank:st.ready ? 0 : st.k === 0 ? 1 : 5}; });
+  const sample = [
+    {name:'Tyler Moss', school:'Lacrosse', day:9, step:2, model:'0.40', need:'No change in 5 days', rank:1},
+    {name:'Hannah Cole', school:'Women’s soccer', day:4, step:2, model:'0.75', need:'3+ flags', rank:2},
+    {name:'Grace Kim', school:'Women’s basketball', day:3, step:2, model:'–', need:'Missed 2 checks', rank:3},
+    {name:'Owen Park', school:'Wrestling', day:8, step:3, model:'0.05', need:'Recovering', rank:6}
+  ];
+  const rows = live.concat(sample).sort((a, b) => a.rank - b.rank);
+  const pill = n => '<span class="pill' + (/review|New/.test(n) ? ' remove' : /No change|3\+|Missed/.test(n) ? ' stop' : /Cleared|Closed/.test(n) ? ' signed' : '') + '">' + esc(n) + '</span>';
+  let h = '<div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:end"><div><span class="label">Chesapeake State Sports Medicine</span><h1>Open cases · all teams</h1></div><button class="btn ink" style="width:auto" data-act="ok-phone">Run an in-clinic check</button></div>';
+  h += '<div class="tw"><table class="cases"><thead><tr><th>Athlete</th><th>Team</th><th>Day</th><th>Step</th><th>Model</th><th>Needs attention</th><th></th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td><b>' + esc(r.name) + '</b></td><td class="small">' + esc(r.school) + '</td><td>' + r.day + '</td><td>' + r.step + '</td><td class="code">' + r.model + '</td><td>' + pill(r.need) + '</td><td>' + (r.id ? '<button class="linkbtn" data-act="ok-open" data-arg="' + r.id + '">Open</button>' : '<span class="small muted">demo row</span>') + '</td></tr>').join('') +
+    '</tbody></table></div><p class="small muted">Sorted by who needs attention first. Basketball cases appear when Marcus opens one.</p>';
+  return browser('', h, true);
+}
+function okaforPhone(){
+  if (S.check) return checkFlow('okafor');
+  const ids = teamPlayers('marcus').filter(id => caseFor(id) && !cstate(caseFor(id)).closed);
+  let b = '<h3>In-clinic check</h3><p class="small muted">Runs the full check on this iPad Pro, using its TrueDepth front camera, and adds it to the athlete’s case.</p>';
+  b += ids.length ? '<div class="stack">' + ids.map(id => '<button class="row" data-act="clinic-check" data-arg="' + id + '">' + avatar(id) + '<span class="nm">' + esc(PLAYERS[id].name) + '<small>Men’s basketball</small></span></button>').join('') + '</div>' : '<div class="card"><p class="small">No open basketball cases yet. As Marcus, check Jalen and remove him to create one.</p></div>';
+  return phone(brandTitle('Clinic'), 'Chesapeake State Sports Medicine', b + '<button class="btn" data-act="ok-desk">Back to case list</button>', '');
+}
+
+/* ===== rail, outbox ===== */
+function guideText(){
+  const pc = caseFor('priya'), ps = pc ? cstate(pc) : null, jc = caseFor('jalen');
+  if (!S.signedIn) return 'The app opens on sign-in. Each demo account is a different person, and each sees only their own app. Start by signing in as Dana Whitfield, Empower MMA’s coach.';
+  switch (S.persona){
+    case 'dana':
+      if (S.day < 0) return 'Preseason. Casey Lin has no baseline because the family hasn’t signed consent. Move to tournament day to run a check.';
+      if (!pc) return S.day === 0 ? 'Grappling, round 2. Priya Nair was taken down and her head hit the mat hard. She is slow to get up. Tap Check a player.' : 'Go back to Oct 2 and check Priya, or use a shortcut.';
+      if (ps.closed) return 'Priya is back. Open Log to see the school record.';
+      return 'Priya’s case is open. Tap her row to see today’s practice limit. Then switch to Priya or move the day forward.';
+    case 'marcus':
+      if (S.day < 0) return 'Preseason. Open Baselines. Jalen’s baseline trips the concussion model. Decide what to do.';
+      if (!jc) return 'Conference game, 2nd half. Check any player. A removal goes straight to Dr. Okafor, the team physician.';
+      return 'Jalen has an open case. Switch to Dr. Okafor to see it in his list.';
+    case 'priya':
+      if (S.day < 0) return 'Preseason. Priya recorded her baseline on Aug 18.';
+      if (!pc) return 'No case yet. As Dana on Oct 2, check Priya. Or use a shortcut.';
+      if (ps.closed) return 'Priya is back to full play. See Progress for the whole recovery.';
+      if (ps.ready && ps.shared == null) return 'Two clean checks in a row. Share the report, then switch to Dr. Ruiz.';
+      if (ps.ready) return 'Waiting for Dr. Ruiz. Switch to her to review and sign.';
+      return 'Run today’s check and look at Steps, then move the day forward. Day 6 shows a setback. Day 9 is ready for review.';
+    case 'jalen':
+      if (S.day < 0) return S.jb === 'retake' ? 'Marcus asked Jalen to retake his baseline. Record it.' : 'Preseason. As Marcus, open Baselines to decide about Jalen’s baseline.';
+      if (!jc) return 'Jalen took a hard hit. Try “Ask Marcus to check me”, then switch to Marcus.';
+      return 'Jalen’s case is open. His recovery uses the same demo values as Priya’s.';
+    case 'ruiz':
+      if (!pc || ps.shared == null) return 'Dr. Ruiz sees a report only after Priya’s family shares it, around day 9. Use “Priya, day 9” below.';
+      if (ps.signed) return 'Signed. Switch to Dana or Priya to see what changed.';
+      return 'Open the knowledge graph chain in the report, then sign. Try the athletic trainer credential.';
+    case 'okafor': return S.openReport ? 'Same report Dr. Ruiz sees.' : 'All Chesapeake State teams. Basketball cases appear when Marcus removes someone.';
+  }
+  return '';
+}
+function renderRail(){
+  const groups = ['Coach','Player','Clinician'];
+  let h = '<div class="brand"><b>Sideline</b><span>Working demo with demo data. Built on the OculoDx knowledge graph.</span></div>';
+  h += '<p class="fine">Demo controls. These help you present the demo and are not part of the app.</p>';
+  h += '<div class="panel"><span class="label">Day</span><div class="days"><button data-act="day" data-arg="-1" aria-label="Previous day"' + (S.day <= DAYMIN ? ' disabled' : '') + '>‹</button><div class="dl"><b>' + dlong(S.day) + '</b><small>' + (S.day < 0 ? 'Preseason' : S.day === 0 ? 'Game day' : 'Day ' + S.day + ' after the game') + '</small></div><button data-act="day" data-arg="1" aria-label="Next day"' + (S.day >= DAYMAX ? ' disabled' : '') + '>›</button></div></div>';
+  h += '<div class="panel guide"><span class="label">Try this</span><p>' + guideText() + '</p></div>';
+  h += '<div class="panel"><span class="label">Shortcuts</span><div class="jumps"><button data-act="jump" data-arg="game">Game day, before the hit</button><button data-act="jump" data-arg="d6">Priya, day 6: a setback</button><button data-act="jump" data-arg="d9">Priya, day 9: ready for review</button><button data-act="jump" data-arg="pre">Preseason baselines (Marcus)</button><button data-act="jump" data-arg="reset">Start over</button></div>' +
+    '<label class="toggle" for="snd"><input type="checkbox" id="snd"' + (S.sound ? ' checked' : '') + '> Sound cues during checks</label></div>';
+  h += '<div class="panel"><span class="label">From the knowledge graph</span><p class="chainline">SRC → TST → OBS → CMP → FTR → BMK → MDL → CND</p><p class="small">' + Object.keys(SENSORS).length + ' sensors, ' + Object.keys(TESTS).length + ' tests, ' + Object.keys(OBS).length + ' observations, ' + BMK.length + ' biomarkers, 1 model, 4 conditions (CND-00066, CND-00002, CND-00220, CND-00260).</p><p class="fine">' + SNAPSHOT + '. Model is planned and unvalidated. Gaze stabilization is not built.</p></div>';
+  h += '<p class="fine">Sideline does not diagnose concussion and never clears anyone to play. People and measurements are demo data. Clearance rules: Empower MMA policy (matching Maryland youth sports law) for the youth team, the NCAA protocol for basketball.</p>';
+  document.getElementById('rail').innerHTML = h;
+}
+function renderOutbox(){
+  const items = S.msgs.filter(m => m.day <= S.day).slice().reverse();
+  document.getElementById('outbox').innerHTML = '<h2>Sent outside the app</h2><p class="small muted">Texts, emails and secure links. Parents and doctors without the app see these.</p>' +
+    items.map(m => '<article class="msg"><header><span class="to">' + esc(m.to) + '</span><span class="ch">' + esc(m.ch) + '</span></header><span class="small muted">' + esc(m.when) + '</span><p>' + esc(m.text) + '</p></article>').join('');
+}
+function renderStage(){
+  const per = PERSONAS[S.persona];
+  let html, where;
+  if (!S.signedIn){ html = loginView(); where = 'iPhone app'; }
+  else if (per.kind === 'coach'){ html = coachApp(S.persona); where = 'iPhone app'; }
+  else if (per.kind === 'player'){ html = playerApp(S.persona); where = 'iPhone app, own phone'; }
+  else if (per.kind === 'ruiz'){ html = ruizView(); where = 'iPad, secure link in Safari'; }
+  else { html = S.okPhone ? okaforPhone() : okaforView(); where = 'iPad app'; }
+  const mbar = '<div class="mbar"><span class="md">Demo day</span>' +
+    '<button data-act="day" data-arg="-1" aria-label="Previous day"' + (S.day <= DAYMIN ? ' disabled' : '') + '>‹</button><span class="md">' + (S.day < 0 ? 'Preseason' : dshort(S.day)) + '</span><button data-act="day" data-arg="1" aria-label="Next day"' + (S.day >= DAYMAX ? ' disabled' : '') + '>›</button></div>';
+  document.getElementById('stage').innerHTML = mbar + '<div class="stage-head"><h2>' + (S.signedIn ? esc(per.name) : 'Signed out') + '</h2><span>' + where + '</span></div>' + html;
+  if (S.check && S.check.phase === 'run' && !RUN) startRun();
+}
+function render(){ renderRail(); renderStage(); renderOutbox(); }
+let toastT = null;
+function toast(t){ const el = document.getElementById('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3000); }
+
+/* ===== actions ===== */
+function ensurePriyaCase(){ if (!S.cases.priya){ const d = S.day, pr = S.persona; S.day = 0; S.persona = 'dana'; openCase('priya', 'remove', SCEN.concussed.v, runModel(SCEN.concussed.v)); S.day = d; S.persona = pr; } }
+const A = {
+  signin(a){ A.persona(a); S.signedIn = true; },
+  signout(){ S.signedIn = false; S.check = null; RUN = null; S.view = {}; S.okPhone = false; S.openReport = null; },
+  toast(a){ toast(a); return 'norender'; },
+  persona(a){ S.persona = a; S.check = null; RUN = null; S.signErr = ''; },
+  day(a){ S.day = Math.max(DAYMIN, Math.min(DAYMAX, S.day + Number(a))); S.check = null; RUN = null; S.view = {}; S.signErr = ''; },
+  tab(a){ S.tab[S.persona] = a; S.view[S.persona] = {}; },
+  jump(a){
+    if (a === 'reset' || a === 'game'){ const snd = S.sound; S = fresh(); S.sound = snd; RUN = null; if (a === 'game') S.signedIn = true; return; }
+    S.check = null; RUN = null; S.view = {}; S.okPhone = false; S.openReport = null;
+    if (a === 'pre'){ S.day = -1; S.persona = 'marcus'; S.tab.marcus = 'baselines'; S.signedIn = true; return; }
+    ensurePriyaCase(); S.persona = 'priya'; S.tab.priya = 'today'; S.day = a === 'd6' ? 6 : 9; S.signedIn = true;
+  },
+  'check-start'(){ S.check = {phase:'pick'}; },
+  'roster-tap'(a){ if (caseFor(a)) S.view[S.persona] = {caseOf:a}; else S.check = {phase:'setup', player:a}; },
+  'check-player'(a){ S.check.player = a; S.check.phase = 'setup'; },
+  'check-cancel'(){ S.check = null; RUN = null; },
+  sos(){ RUN = null; if (!S.check.player){ S.check.player = PERSONAS[S.persona].team === 'marcus' ? 'jalen' : 'priya'; } S.check.phase = 'sos'; },
+  'log-observed'(){ const pid = S.check.player; openCase(pid, 'observed', SCEN.concussed.v); S.check = null; S.view[S.persona] = {caseOf:pid}; toast('Logged. Parent texted.'); },
+  run(){ S.check.phase = 'run'; RUN = null; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.resume) AC.resume(); } catch(e){} },
+  skip(){ RUN = null; finishRun(); return 'norender'; },
+  scenario(a){ const v = SCEN[a].v; S.check.values = v; S.check.result = decide(v); S.check.phase = 'result'; },
+  retry(){ S.check.retries = (S.check.retries || 0) + 1; S.check.phase = 'setup'; },
+  keep(){ const p = PLAYERS[S.check.player]; addLog(p.team, 'Sideline check on ' + p.name + ': model ' + pfmt(S.check.result.model.p) + ', no change detected. Not removed. By ' + PERSONAS[S.persona].name + '.'); S.check = null; toast('Logged. Check ' + p.first + ' again at halftime.'); },
+  'log-case'(a){ const ch = S.check, pid = ch.player; openCase(pid, a, a === 'suspected' && ch.result && ch.result.outcome !== 'fail' ? SCEN.concussed.v : (ch.values && ch.result.outcome !== 'fail' ? ch.values : SCEN.concussed.v), ch.result && ch.result.model); S.check = null; S.view[S.persona] = {caseOf:pid}; toast('Case opened. Parent texted.'); },
+  'open-case'(a){ S.view[S.persona] = {caseOf:a}; },
+  'close-case'(){ S.view[S.persona] = {}; },
+  how(){ S.view[S.persona] = {how:true}; },
+  'close-how'(){ S.view[S.persona] = {}; },
+  'send-log'(){ const t = PERSONAS[S.persona].team, n = S.log.filter(l => l.team === t && l.day <= S.day).length; addMsg('Email', 'Athletic director, ' + TEAMS[t].school, 'Sideline record for ' + TEAMS[t].team + ': ' + n + ' timestamped entries. Attached as PDF and CSV.'); toast('Sent to the athletic director.'); },
+  jb(a){ S.jb = a; if (a === 'retake') toast('Jalen will see a retake request in his app.'); },
+  'full-check'(a){ S.check = {phase:'setup', full:true, purpose:a, player:S.persona, self:true}; },
+  'check-finish'(){ const ch = S.check; if (ch.purpose === 'baseline'){ S.jb = 'good'; addLog('marcus', 'Jalen Brooks retook his baseline. No model flags, all measures within catalog ranges.'); } if (ch.purpose === 'daily') S.dailyDone[ch.player + ':' + S.day] = true; if (ch.purpose === 'clinic'){ addLog('marcus', 'In-clinic check for ' + PLAYERS[ch.player].name + ' by Dr. Tom Okafor.'); S.okPhone = false; } S.check = null; },
+  'self-report'(){ S.view[S.persona] = {report:true}; },
+  'close-report'(){ S.view[S.persona] = {}; },
+  'send-report'(){ const picked = [0,1,2,3,4,5].map(i => document.getElementById('sr' + i)).filter(el => el && el.checked).map(el => el.value.toLowerCase()); S.selfReport[S.persona] = picked.length ? 'they have: ' + picked.join(', ') : 'something feels wrong'; S.reports[S.persona] = S.day; S.view[S.persona] = {}; toast('Sent to ' + (PLAYERS[S.persona].team === 'marcus' ? 'Marcus' : 'Coach Whitfield') + '.'); },
+  share(){ const c = caseFor('priya'); c.shared = S.day; addMsg('Secure link', 'Dr. Elena Ruiz, Linden Pediatrics', 'Anita Nair shared Priya Nair’s concussion recovery report. Open: sideline.health/r/PN-7KQ2 (expires in 14 days, no account needed).'); toast('Shared with Dr. Ruiz.'); },
+  sign(a){
+    const name = document.getElementById('so-name').value.trim(), cred = document.getElementById('so-cred').value, lic = document.getElementById('so-lic').value.trim();
+    const dec = (document.querySelector('input[name="so-dec"]:checked') || {}).value;
+    if (!name || !lic){ S.signErr = 'Enter your name and licence number to sign.'; return; }
+    if (cred === 'at'){ S.signErr = TEAMS[PLAYERS[a].team].atNo; return; }
+    S.signErr = '';
+    const credLabel = {md:'MD', pa:'PA', np:'NP'}[cred], c = caseFor(a), p = PLAYERS[a], who = (cred === 'md' ? 'Dr. ' : '') + name;
+    if (dec === 'clear'){
+      c.signed = {day:S.day, name:who, credLabel, lic};
+      addMsg('Text', notifyTo(p), who + ', ' + credLabel + ', cleared ' + p.first + ' for full-contact practice today. Competition from ' + dshort(S.day + 1) + '.');
+      addLog(p.team, 'Written clearance for full-contact practice: ' + who + ', ' + credLabel + ', licence ' + lic + '.');
+      toast('Signed. The family and ' + TEAMS[p.team].staff + ' have been told.');
+    } else {
+      c.reviews.push({day:S.day, name:who, decision:dec});
+      addMsg('Text', notifyTo(p), who + ' reviewed ' + p.first + '’s report: ' + (dec === 'notyet' ? 'not yet cleared. Continue at step 4.' : 'referred to a concussion specialist.'));
+      toast('Decision recorded.');
+    }
+  },
+  'ok-open'(a){ S.openReport = a; },
+  'close-okreport'(){ S.openReport = null; },
+  'ok-phone'(){ S.okPhone = true; },
+  'ok-desk'(){ S.okPhone = false; S.check = null; },
+  'clinic-check'(a){ S.check = {phase:'setup', full:true, purpose:'clinic', player:a}; }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const fn = A[el.dataset.act]; if (!fn) return;
+  if (fn(el.dataset.arg) !== 'norender') render();
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'snd') S.sound = e.target.checked;
+  if (e.target.id === 'm-persona'){ A.persona(e.target.value); render(); }
+});
+window.SidelineDemo = {
+  avatar: avatar,
+  go: function(o){
+    S.check = null; RUN = null; S.view = {}; S.okPhone = false; S.openReport = null;
+    if (o.jump) A.jump(o.jump);
+    if (o.case) ensurePriyaCase();
+    if (o.persona) S.persona = o.persona;
+    if (o.day != null) S.day = o.day;
+    if (o.tab) S.tab[S.persona] = o.tab;
+    S.signedIn = true;
+    render();
+  }
+};
+render();
+})();
+</script>
+
+<script>// Coach and player journey maps. Rendered at runtime so they can use the demo's avatars and jump into the demo.
+(function(){
+var J = [
+  {id:'coach', title:'Coach journey', who:'Dana Whitfield, head coach, Empower MMA youth team (ages 11–14). Variant: Marcus Bell, athletic trainer, Chesapeake State men’s basketball.',
+   faces:['dana','marcus'], stages:[
+    {t:'Set up the season', when:'August', moment:'Dana starts the youth season at Empower MMA. Marcus starts preseason for men’s basketball.',
+     does:'Creates the team, confirms whose rules apply, imports the roster.',
+     app:'Sets the clearance rule from the team type: club policy matching Maryland youth sports law for Empower MMA, the NCAA protocol for Chesapeake State. Sends the concussion information sheet and consent.',
+     feel:3, feeling:'One more thing to set up before the season.', design:'A short setup. The roster shows who has not consented yet.',
+     diff:'Youth: parents consent; under-13s need verifiable parental consent (COPPA). College: athletes consent themselves.', go:{persona:'dana', day:-1}},
+    {t:'Baseline day', when:'Before the first event', moment:'Every athlete records a baseline.',
+     does:'Runs a group session, or athletes record at home.',
+     app:'Full check, about 3 minutes: Light Response (TST-00006), Follow the Dot (TST-00002), Hold and Look (TST-00005), Head Turn (TST-00004). A baseline that already trips the concussion model, or has pupil measures outside catalog ranges, is flagged as possible low effort.',
+     feel:3, feeling:'Worried about time. Doubts teenagers will try hard.', design:'Flagged baselines land in a review list with a one-tap retake request.',
+     diff:'Marcus finds Jalen’s baseline flagged and asks for a retake.', go:{jump:'pre'}},
+    {t:'The hit', when:'Event day', moment:'Grappling, round 2: Priya is taken down and her head hits the mat. Second half: Jalen’s head hits the floor driving to the basket.',
+     does:'Taps Check a player and picks the athlete.',
+     app:'Shows setup only: out of glare, headgear off, phone at arm’s length facing the athlete. A Call 911 button stays on screen for what the coach can see: a seizure, a knockout, vomiting.',
+     feel:1, feeling:'Adrenaline. Parents and teammates watching. Pressure to keep the athlete in.', design:'No questions. The coach is never asked to judge a concussion.', go:{persona:'dana', day:0}},
+    {t:'The 2-minute check', when:'On the spot', moment:'The coach holds the phone up. The athlete watches the screen.',
+     does:'Holds still and waits for the tones.',
+     app:'Light Response 15 s, Follow the Dot 75 s, Hold and Look 30 s. A tone and a buzz at the start, halfway, and the end.',
+     feel:2, feeling:'Can’t see the screen. Needs to know it is working.', design:'Audio and haptic cues. A failed capture says so instead of guessing.', go:{persona:'dana', day:0}},
+    {t:'One instruction', when:'Two minutes later', moment:'The phone runs concussion-oculomotor-screen-v1 on the measured biomarkers.',
+     does:'Follows the single instruction on screen.',
+     app:'Call 911 if pupils differ by more than 1 mm (CND-00260). Remove from play if the model gives 0.40 or more. No change detected otherwise, and it never reads as safe. Could not measure if capture failed.',
+     feel:3, feeling:'Relief at not having to make the call. Still has to face the athlete.', design:'The result lists which flags fired and the values behind them, so the coach can explain it.', go:{persona:'dana', day:0}},
+    {t:'After removal', when:'That evening', moment:'The athlete is out for the day.',
+     does:'Nothing else tonight.',
+     app:'Opens a case, notifies the right people, and writes a timestamped log entry.',
+     feel:4, feeling:'Did the right thing, and has a record of it.', design:'A coach cannot undo a removal. Only a clinician closes a case.',
+     diff:'Youth: parent texted with tonight’s 911 signs. College: athlete texted, team physician gets the case, emergency contact only if 911 is called.', go:{case:true, persona:'dana', day:0}},
+    {t:'Recovery week', when:'Days 1–8', moment:'The athlete comes to practice but cannot train fully.',
+     does:'Opens the case to see today’s limit.',
+     app:'Shows the return-to-sport step and the practice limit only, no health data. Steps move on the athlete’s daily checks.',
+     feel:3, feeling:'Wants the athlete back. Unsure what is allowed.', design:'One plain line a day, such as “Solo drills only: footwork, shadow drills, shooting. No contact.”', go:{case:true, persona:'dana', day:5}},
+    {t:'Back in action', when:'Day 9 onward', moment:'A clinician signs the clearance.',
+     does:'Brings the athlete back to full-contact practice, then competition the next day.',
+     app:'Notifies the coach, records the clinician’s name, credential and licence, and closes the case after step 6.',
+     feel:5, feeling:'Confident the return was done properly.', design:'Only a clinician allowed by the team’s rules can sign.', go:{case:true, persona:'dana', day:9}}
+  ]},
+  {id:'player', title:'Player journey', who:'Priya Nair, 13, green belt, Empower MMA. Second concussion. Variant: Jalen Brooks, 20, point guard, Chesapeake State, hoping to go pro.',
+   faces:['priya','jalen'], stages:[
+    {t:'Baseline', when:'Preseason', moment:'On their own phone, before the first event.',
+     does:'Records a 3-minute baseline: watch the flashes, follow a dot, hold still, read a moving letter.',
+     app:'Checks the baseline against catalog ranges and the model. A low-effort baseline gets a retake request that explains why effort protects you.',
+     feel:3, feeling:'Priya: a little nervous, parent nearby. Jalen: tempted to coast so later checks look normal.', design:'Says plainly that a weak baseline can hide a real injury.',
+     diff:'Priya is 13, so her parent consents. Jalen consents himself.', go:{jump:'pre', persona:'jalen'}},
+    {t:'Something feels off', when:'Event day', moment:'After a hit the athlete feels foggy but wants to stay in.',
+     does:'Can tap Ask to be checked. Optional.',
+     app:'Alerts the coach. Asking never benches anyone by itself; the check decides.',
+     feel:2, feeling:'Afraid of losing their spot.', design:'Takes the cost out of speaking up.', go:{persona:'jalen', day:0}},
+    {t:'Checked on the sideline', when:'Event day', moment:'The coach holds the phone up in front of them.',
+     does:'Keeps the head still, watches the flashes and follows the dot for 2 minutes.',
+     app:'Measures pupils, eye movements and blinks. There is nothing to answer, so nothing to downplay.',
+     feel:2, feeling:'Tense. Wants to pass.', design:'No questionnaire. Measurements decide.', go:{persona:'dana', day:0}},
+    {t:'Removed', when:'Day 0', moment:'The result says remove from play.',
+     does:'Goes home to rest.',
+     app:'Starts the comeback plan and lists tonight’s warning signs.',
+     feel:1, feeling:'Priya: scared, it is her second concussion. Jalen: angry, thinking about scouts.', design:'Calm wording: “Most people recover in a few weeks.”',
+     diff:'Priya’s parent gets the text. Jalen gets it himself.', go:{case:true, persona:'priya', day:0}},
+    {t:'Rest', when:'Days 0–1', moment:'No training, light school only.',
+     does:'Rests. No check yet.',
+     app:'No checks for 48 hours. Shows what is allowed today at school and in sport.',
+     feel:2, feeling:'Bored, and worried about school.', design:'Return-to-learn and return-to-sport side by side.', go:{case:true, persona:'priya', day:1}},
+    {t:'Daily check', when:'Day 2 onward', moment:'One check a day, on their own phone.',
+     does:'Runs the 3-minute check.',
+     app:'Runs the full check and the model. No flags moves both ladders up one step the next day. Three or more flags moves them back one.',
+     feel:3, feeling:'Jalen: impatient. Priya: anxious.', design:'Comeback ring, step name, and a dot for every check. Each day says why the step moved.', go:{case:true, persona:'priya', day:4}},
+    {t:'Setback', when:'Day 6', moment:'Day 5’s check had 3 flags after part-time school.',
+     does:'Steps back for a day.',
+     app:'Drops sport and school back to step 2 and says why.',
+     feel:1, feeling:'Frustrated.', design:'Treats setbacks as normal and shows the data behind them.', go:{jump:'d6'}},
+    {t:'Ready for review', when:'Day 9', moment:'Two clean checks in a row, with step 4 reached.',
+     does:'Priya’s family shares the report with Dr. Ruiz. Jalen’s goes straight to the team physician.',
+     app:'Unlocks the report on the clinician’s iPad.',
+     feel:4, feeling:'Hopeful.', design:'Says “ready for clinician review”, never “ready to play”.', go:{jump:'d9'}},
+    {t:'Cleared and back', when:'Day 9 onward', moment:'The clinician signs on iPad.',
+     does:'Full-contact practice today, competition tomorrow.',
+     app:'Moves to step 5, then step 6, and closes the case.',
+     feel:5, feeling:'Back with the team.', design:'Only the clinician’s signature unlocks step 5.', go:{jump:'d9', persona:'ruiz'}}
+  ]}
+];
+var FEEL = ['', 'Low', 'Uneasy', 'Steady', 'Good', 'High'];
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function curve(st){
+  var w = 16.75, n = st.length, H = 5.5;
+  var pts = st.map(function(s, i){ return [(i * w + w / 2 - 0.375).toFixed(2), (H - (s.feel - 1) / 4 * (H - 1.5) - 0.75).toFixed(2)]; });
+  var path = pts.map(function(p, i){ return (i ? 'L' : 'M') + p[0] + ' ' + p[1]; }).join('');
+  var dots = pts.map(function(p, i){ return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="0.35" class="jdot f' + st[i].feel + '"/><text x="' + p[0] + '" y="' + (p[1] - 0.6).toFixed(2) + '" class="jlab">' + FEEL[st[i].feel] + '</text>'; }).join('');
+  return '<svg class="jcurve" viewBox="0 0 ' + (n * w - 0.75) + ' ' + H + '" style="width:' + (n * w - 0.75) + 'rem" role="img" aria-label="How they feel at each stage"><path d="' + path + '" class="jline"/>' + dots + '</svg>';
+}
+function render(){
+  var D = window.SidelineDemo, el = document.getElementById('journeys');
+  if (!el) return;
+  el.innerHTML = '<header class="jhead"><h1>User journeys</h1><p>Two journeys for approval before the simulator build. Each stage names what the app does from the OculoDx knowledge graph, how the person feels, and the design answer. <b>See it</b> opens that moment in the demo.</p></header>' +
+    J.map(function(j){
+      return '<section class="journey" id="j-' + j.id + '"><div class="jtitle"><div class="jfaces">' + j.faces.map(function(f){ return D && D.avatar && (f === 'priya' || f === 'jalen') ? D.avatar(f, 'av-md') : '<span class="ini jini">' + (f === 'dana' ? 'DW' : 'MB') + '</span>'; }).join('') + '</div><div><h2>' + esc(j.title) + '</h2><p>' + esc(j.who) + '</p></div></div>' +
+        '<div class="jscroll"><div class="jinner">' + curve(j.stages) + '<div class="jcols">' + j.stages.map(function(s, i){
+          return '<article class="jcard"><div class="jnum">' + (i + 1) + '</div><span class="label">' + esc(s.when) + '</span><h3>' + esc(s.t) + '</h3>' +
+            '<p class="jmoment">' + esc(s.moment) + '</p>' +
+            '<dl><dt>They do</dt><dd>' + esc(s.does) + '</dd><dt>Sideline does</dt><dd>' + esc(s.app) + '</dd><dt>They feel</dt><dd>' + esc(s.feeling) + '</dd><dt>Design answer</dt><dd>' + esc(s.design) + '</dd>' + (s.diff ? '<dt>Youth vs. college</dt><dd>' + esc(s.diff) + '</dd>' : '') + '</dl>' +
+            (s.go ? '<button class="jgo" data-go="' + esc(JSON.stringify(s.go)) + '">See it in the demo</button>' : '') + '</article>';
+        }).join('') + '</div></div></div></section>';
+    }).join('');
+}
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-go]'); if (!b || !window.SidelineDemo) return;
+  window.SidelineDemo.go(JSON.parse(b.getAttribute('data-go')));
+  location.hash = '#demo';
+});
+render();
+})();
+</script>
+<script>
+(function(){
+  function show(){
+    var h = location.hash.replace('#',''), el = h && document.getElementById(h);
+    var view = h === 'design' || h === 'journeys' ? h : (el && document.getElementById('view-design').contains(el) ? 'design' : (el && document.getElementById('view-journeys').contains(el) ? 'journeys' : 'demo'));
+    ['demo','journeys','design'].forEach(function(v){ document.getElementById('view-' + v).hidden = v !== view; });
+    document.querySelectorAll('.topnav a').forEach(function(a){ a.setAttribute('aria-current', a.dataset.view === view ? 'page' : 'false'); });
+    if (['demo','journeys','design'].indexOf(h) >= 0) window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', show); show();
+})();
+</script>
+</body>
+</html>

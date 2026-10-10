@@ -35,7 +35,57 @@ struct ProviderDashboardView: View {
         }.count
     }
 
+    @Environment(\.horizontalSizeClass) private var hSize
+    @State private var selected: Int?
+
     var body: some View {
+        if hSize == .regular { splitBody } else { compactBody }
+    }
+
+    /// iPad: case list on the left, the selected case on the right.
+    private var splitBody: some View {
+        NavigationSplitView {
+            List(selection: $selected) {
+                Section {
+                    RoleBar(title: "Provider")
+                        .listRowBackground(Color.clear)
+                    Text(actionCount == 0 ? "Nothing waiting on you." : "\(actionCount) waiting on your decision")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(actionCount == 0 ? Palette.muted : Palette.flag)
+                        .listRowBackground(Color.clear)
+                }
+                ForEach(queues) { queue in
+                    Section(queue.title) {
+                        ForEach(queue.athletes) { athlete in
+                            HStack(spacing: 12) {
+                                PlayerPhoto(athlete: athlete, size: 40)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(athlete.name).font(.system(size: 16, weight: .semibold)).foregroundStyle(Palette.ink)
+                                    Text(athlete.sport).font(Typeface.caption).foregroundStyle(Palette.muted)
+                                }
+                                Spacer()
+                                StatusTag(status: athlete.status)
+                            }
+                            .padding(.vertical, 4)
+                            .tag(athlete.id)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Cases")
+            .navigationSplitViewColumnWidth(min: 340, ideal: 380)
+        } detail: {
+            if let id = selected {
+                NavigationStack { ProviderCaseView(athleteID: id) }
+            } else {
+                ContentUnavailableView("Select a case", systemImage: "stethoscope",
+                                       description: Text("Cases waiting on your decision are at the top."))
+            }
+        }
+        .onAppear { if selected == nil { selected = queues.first?.athletes.first?.id } }
+    }
+
+    private var compactBody: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.section) {
@@ -106,7 +156,7 @@ struct ProviderCaseView: View {
                     header(athlete)
                     request(athlete)
                     if !athlete.injuryMetrics.isEmpty { injuryDay(athlete) }
-                    if !athlete.history.isEmpty { RecoveryChart(history: athlete.history) }
+                    if !athlete.history.isEmpty { RecoveryChart(history: athlete.history, specs: athlete.biomarkers) }
                     if athlete.showsSteps { StepsLadder(athlete: athlete) }
                     EventTimeline(events: athlete.events)
                     decision(athlete)
@@ -131,8 +181,8 @@ struct ProviderCaseView: View {
 
     private func header(_ athlete: Athlete) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text("\(athlete.number)").font(Typeface.mono(44, weight: .bold)).foregroundStyle(Palette.muted)
+            HStack(alignment: .center, spacing: 14) {
+                PlayerPhoto(athlete: athlete, size: 64)
                 Text(athlete.name).font(Typeface.display(34)).foregroundStyle(Palette.ink)
             }
             Text(athlete.sport).font(Typeface.body).foregroundStyle(Palette.muted)

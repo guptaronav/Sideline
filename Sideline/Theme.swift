@@ -22,15 +22,21 @@ extension Color {
     }
 }
 
-/// One signal color (flag) and one reassurance color (steady). Everything else is paper and ink.
+/// Sport look: white field, black ink, electric blue for "your normal", orange only for "act now".
 enum Palette {
-    static let paper  = Color(light: 0xF2EFE8, dark: 0x111312)
-    static let card   = Color(light: 0xFAF8F3, dark: 0x1A1D1B)
-    static let ink    = Color(light: 0x16181A, dark: 0xEDEAE2)
-    static let muted  = Color(light: 0x6A6E6B, dark: 0x9A9E99)
-    static let rule   = Color(light: 0xD6D1C5, dark: 0x2D312E)
-    static let flag   = Color(light: 0xCF4419, dark: 0xF0693A)
-    static let steady = Color(light: 0x2E5B4D, dark: 0x86B8A5)
+    static let paper  = Color(light: 0xFFFFFF, dark: 0x0B0B0D)
+    static let card   = Color(light: 0xF3F3F1, dark: 0x17171A)
+    static let ink    = Color(light: 0x0A0A0B, dark: 0xF4F4F5)
+    static let muted  = Color(light: 0x6B6B70, dark: 0x9A9AA0)
+    static let rule   = Color(light: 0xE2E2E4, dark: 0x2A2A2E)
+    static let flag   = Color(light: 0xFF4F1F, dark: 0xFF6A3D)
+    static let steady = Color(light: 0x1446FF, dark: 0x5B7CFF)
+
+    // Brand surfaces (sign-in, team headers, test screens): deep navy, white ink.
+    static let brand       = Color(hex: 0x0B1B3A)
+    static let brandRaised = Color(hex: 0x14284F)
+    static let brandInk    = Color.white
+    static let brandMuted  = Color.white.opacity(0.7)
 
     // The capture viewport is always dark, in both appearances.
     static let viewport     = Color(hex: 0x0E100F)
@@ -42,7 +48,11 @@ enum Palette {
 
 enum Typeface {
     static func display(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .semibold, design: .serif)
+        .system(size: size * 0.92, weight: .bold)
+    }
+    /// The one big number on a screen (step, score). Used sparingly.
+    static func hero(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .bold, design: .rounded)
     }
     static func mono(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
@@ -69,30 +79,81 @@ struct Eyebrow: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(.system(size: 11, weight: .semibold))
-            .tracking(1.3)
+            .font(.system(size: 12, weight: .semibold))
+            .tracking(0.4)
             .foregroundStyle(color)
     }
 }
 
-/// Yard-line hash marks: a long tick every fifth mark.
+/// Section divider: a hairline.
 struct HashRule: View {
     var body: some View {
-        Canvas { ctx, size in
-            var x: CGFloat = 0
-            var i = 0
-            while x <= size.width {
-                let h = i % 5 == 0 ? size.height : size.height * 0.45
-                var p = Path()
-                p.move(to: CGPoint(x: x, y: size.height))
-                p.addLine(to: CGPoint(x: x, y: size.height - h))
-                ctx.stroke(p, with: .color(Palette.rule), lineWidth: 1)
-                x += 6
-                i += 1
-            }
+        Rectangle().fill(Palette.rule).frame(height: 1).accessibilityHidden(true)
+    }
+}
+
+/// Icon theme, locked: SF Symbols only, semibold weight.
+/// Things (tests, steps, roles) sit in a colored rounded tile; details (time, counts, dates) get a small inline glyph.
+enum Icon {
+    static let time = "clock"
+    static let date = "calendar"
+    static let steps = "stairs"
+    static let team = "person.3.fill"
+    static let clinician = "stethoscope"
+    static let alert = "exclamationmark.triangle.fill"
+    static let check = "checkmark.circle.fill"
+    static let baseline = "scope"
+}
+
+struct IconTile: View {
+    let symbol: String
+    var tint: Color = Palette.steady
+    var size: CGFloat = 36
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: size * 0.46, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background(tint, in: RoundedRectangle(cornerRadius: size * 0.28))
+            .accessibilityHidden(true)
+    }
+}
+
+struct IconLabel: View {
+    let symbol: String
+    let text: String
+    var color: Color = Palette.muted
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol).font(.system(size: 12, weight: .semibold))
+            Text(text).font(.system(size: 13, weight: .medium)).monospacedDigit()
         }
-        .frame(height: 8)
-        .accessibilityHidden(true)
+        .foregroundStyle(color)
+    }
+}
+
+/// Each test has its own color, carried from the list into the capture screen and the result.
+extension GraphTest {
+    var tint: Color {
+        switch self {
+        case .lightResponse:       Color(hex: 0xF5A300)
+        case .followTheDot:        Color(hex: 0x00A8E0)
+        case .holdAndLook:         Color(hex: 0x6E56F0)
+        case .dynamicVisualAcuity: Color(hex: 0x1FB86A)
+        case .closeUpEyePhoto:     Color(hex: 0xF0487E)
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .lightResponse:       "sun.max.fill"
+        case .followTheDot:        "smallcircle.filled.circle"
+        case .holdAndLook:         "scope"
+        case .dynamicVisualAcuity: "arrow.left.and.right"
+        case .closeUpEyePhoto:     "camera.aperture"
+        }
     }
 }
 
@@ -102,15 +163,12 @@ struct Tag: View {
     var filled = false
 
     var body: some View {
-        Text(text.uppercased())
-            .font(.system(size: 10.5, weight: .bold))
-            .tracking(0.9)
-            .foregroundStyle(filled ? Palette.paper : color)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(filled ? color : Color.clear)
-            .overlay(RoundedRectangle(cornerRadius: 3).stroke(color, lineWidth: filled ? 0 : 1))
-            .clipShape(RoundedRectangle(cornerRadius: 3))
+        Text(text)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(filled ? .white : color)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(filled ? color : color.opacity(0.12), in: Capsule())
     }
 }
 
@@ -119,24 +177,25 @@ struct SolidButton: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(size: 17, weight: .semibold))
             .foregroundStyle(Palette.paper)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(tint)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-            .opacity(configuration.isPressed ? 0.8 : 1)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
 }
 
 struct OutlineButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(size: 17, weight: .semibold))
             .foregroundStyle(Palette.ink)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
-            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.ink, lineWidth: 1.5))
+            .background(Palette.card)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
             .opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
@@ -144,8 +203,8 @@ struct OutlineButton: ButtonStyle {
 extension View {
     func panel() -> some View {
         self
-            .padding(16)
+            .padding(18)
             .background(Palette.card)
-            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.rule, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
