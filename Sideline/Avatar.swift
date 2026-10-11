@@ -40,7 +40,7 @@ struct PhotoPlaceholder: View {
     }
 }
 
-/// Team header with the sport's own line art behind it: the cage for Empower MMA, the court for Chesapeake State.
+/// Team header with the sport's own line art behind it: the cage for Ridgeline Academy, the court for Chesapeake State.
 struct TeamBackdrop: View {
     let team: Team?
 
@@ -49,7 +49,7 @@ struct TeamBackdrop: View {
             let w = sz.width, h = sz.height
             let line = GraphicsContext.Shading.color(.white.opacity(0.22))
             switch team {
-            case .empower:
+            case .ridgeline:
                 // octagon cage and the mat's center circle
                 let cx = w * 0.78, cy = h * 0.55, rad = h * 0.75
                 var oct = Path()
@@ -99,10 +99,10 @@ struct TeamBackdrop: View {
 }
 
 extension Team {
-    var color: Color { self == .empower ? Color(hex: 0x0E6E6A) : Color(hex: 0x13294B) }
-    var accent: UInt32 { self == .empower ? 0x7FE3C9 : 0xF2A900 }
+    var color: Color { self == .ridgeline ? Color(hex: 0x0E6E6A) : Color(hex: 0x13294B) }
+    var accent: UInt32 { self == .ridgeline ? 0x7FE3C9 : 0xF2A900 }
     /// SF Symbols athlete silhouette for the team's sport.
-    var figure: String { self == .empower ? "figure.martial.arts" : "figure.basketball" }
+    var figure: String { self == .ridgeline ? "figure.martial.arts" : "figure.basketball" }
 }
 
 /// A rounded team hero card: sport artwork behind a title.
