@@ -209,7 +209,11 @@ struct RoleGateView: View {
                     showPicker = false
                 } label: {
                     HStack(spacing: 12) {
-                        PhotoPlaceholder(size: 40)
+                        if let ui = UIImage(named: photoName(account.name)) {
+                            Image(uiImage: ui).resizable().scaledToFill().frame(width: 40, height: 40).clipShape(Circle())
+                        } else {
+                            PhotoPlaceholder(size: 40)
+                        }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(account.name).foregroundStyle(Palette.ink)
                             Text(account.email).font(Typeface.caption).foregroundStyle(Palette.muted)

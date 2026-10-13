@@ -9,7 +9,7 @@ struct MyPhoto: View {
     var body: some View {
         // A photo added on this device wins; otherwise the profile photo on file, looked up by first name.
         if let image = session.photo.flatMap(UIImage.init(data:))
-            ?? (session.account?.name.split(separator: " ").first).flatMap({ UIImage(named: "photo-\($0.lowercased())") }) {
+            ?? session.account.flatMap({ UIImage(named: photoName($0.name)) }) {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
