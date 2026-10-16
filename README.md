@@ -16,6 +16,14 @@ symptoms: decisions rest on measured biomarkers against the athlete's own baseli
 | Athlete | iPhone (iPhone 17 Pro Max for the demo) | Records a baseline once, takes the daily check while recovering, sees their biomarkers |
 | Healthcare provider | iPad, landscape | Works a case queue, reviews biomarker history, approves each return-to-sport step and signs off |
 
+## Supported devices
+
+Sideline runs on iPhone, iPad and foldable iPhone, with a layout designed for each.
+
+| iPhone | iPad | iPhone Duo (unfolded) |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/iphone-sign-in.png" width="200" alt="Sideline sign-in on iPhone"> | <img src="docs/screenshots/ipad-sign-in.png" width="300" alt="Sideline sign-in on iPad"> | <img src="docs/screenshots/iphone-duo-sign-in.png" width="360" alt="Sideline sign-in on iPhone Duo"> |
+
 ## The tests
 
 Four camera tests, each from the OculoDx catalog with its real duration:
