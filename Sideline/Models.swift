@@ -508,6 +508,8 @@ extension Athlete {
                 status: .baselineSet, detail: "Baseline Aug 18", team: .ridgeline),
         Athlete(number: 58, name: "Hana Sato", sport: "Ridgeline Academy · Yellow belt",
                 status: .baselineSet, detail: "Baseline Aug 18", team: .ridgeline),
+        Athlete(number: 60, name: "Fatima Khan", sport: "Ridgeline Academy · Blue belt",
+                status: .baselineSet, detail: "Baseline Sep 4", team: .ridgeline),
         // Chesapeake State men's basketball
         Athlete(number: 3, name: "Jalen Brooks", sport: "Men’s basketball · Guard",
                 status: .baselineSet, detail: "Baseline not recorded", team: .chesapeake, hasBaseline: false, look: AvatarLook(skin: 0x5A3825, hair: .buzz, hairColor: 0x141414, kit: .jersey(number: 3, color: 0x13294B, trim: 0xF2A900), backdrop: 0xE3E8F2)),
