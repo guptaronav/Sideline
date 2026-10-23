@@ -61,7 +61,7 @@ enum Squad: String, CaseIterable, Identifiable, Hashable {
 
 /// Each demo account is a different person signing in. Each sees only their own app.
 enum DemoAccount: String, CaseIterable, Identifiable {
-    case sid, hayes, dana, marcus, priya, jalen, okafor
+    case sid, hayes, dana, marcus, priya, ronav, jalen, okafor
     var id: String { rawValue }
 
     var name: String {
@@ -71,6 +71,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
         case .dana:   "Dana Whitfield"
         case .marcus: "Marcus Bell"
         case .priya:  "Priya Nair"
+        case .ronav:  "Ronav Gupta"
         case .jalen:  "Jalen Brooks"
         case .okafor: "Dr. Tom Okafor"
         }
@@ -83,6 +84,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
         case .dana:   "Coach · Ridgeline Academy youth team"
         case .marcus: "Athletic trainer · Chesapeake State basketball"
         case .priya:  "Athlete · 13 · Ridgeline Academy, yellow belt"
+        case .ronav:  "Athlete · 15 · Ridgeline Academy, black belt"
         case .jalen:  "Athlete · 20 · Chesapeake State, guard"
         case .okafor: "Team physician · sports medicine"
         }
@@ -91,14 +93,14 @@ enum DemoAccount: String, CaseIterable, Identifiable {
     var role: Role {
         switch self {
         case .sid, .hayes, .dana, .marcus:  .coach
-        case .priya, .jalen:  .athlete
+        case .priya, .ronav, .jalen:  .athlete
         case .okafor:         .provider
         }
     }
 
     var team: Team? {
         switch self {
-        case .sid, .dana, .priya:   .ridgeline
+        case .sid, .dana, .priya, .ronav:   .ridgeline
         case .hayes, .marcus, .jalen: .chesapeake
         case .okafor:         nil
         }
@@ -111,6 +113,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
         case .dana:   "dana@ridgelineacademy.com"
         case .marcus: "marcus@chessu.edu"
         case .priya:  "priya@ridgelineacademy.com"
+        case .ronav:  "ronav@ridgelineacademy.com"
         case .jalen:  "jalen@chessu.edu"
         case .okafor: "tom@chessu.edu"
         }
@@ -123,6 +126,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
         case .hayes:  AvatarLook(skin: 0x5A3825, hair: .buzz, hairColor: 0x141414, kit: .polo(color: 0x13294B), backdrop: 0xE3E8F2)
         case .sid:  AvatarLook(skin: 0xC98E62, hair: .short, hairColor: 0x1E1A1A, kit: .polo(color: 0x0E6E6A), backdrop: 0xDDEFEB)
         case .priya:  Athlete.sample.first { $0.number == 51 }!.look
+        case .ronav:  Athlete.sample.first { $0.number == 64 }!.look
         case .jalen:  Athlete.sample.first { $0.number == 3 }!.look
         case .okafor: AvatarLook(skin: 0x5A3825, hair: .short, hairColor: 0x2A2A2A, kit: .polo(color: 0x2B2F36), backdrop: 0xECEDEF)
         }
@@ -140,6 +144,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
     var athleteID: Int? {
         switch self {
         case .priya: 51
+        case .ronav: 64
         case .jalen: 3
         default:     nil
         }
@@ -556,6 +561,17 @@ extension Athlete {
                 detail: "Baseline Aug 19", team: .ridgeline, squadOverride: .mmaTeen),
         Athlete(number: 62, name: "Zara Ahmed", sport: "Ridgeline Academy · Purple belt", status: .baselineSet,
                 detail: "Baseline Aug 19", team: .ridgeline, squadOverride: .mmaTeen),
+        Athlete(number: 64, name: "Ronav Gupta", sport: "Ridgeline Academy · Black belt",
+                status: .recovering(step: 2), detail: "Day 4 · step 2 of 6",
+                history: series([2.5, 2.0, 1.5]),
+                events: [
+                    event("Day 0", .coach, "Removed from play after sideline check. Model 0.75: 3 of 4 domains flagged."),
+                    event("Day 1", .provider, "Evaluation recorded by E. Ruiz, MD. Begin step 1."),
+                    event("Day 2", .system, "Daily check: 3 biomarkers below normal. Step 2."),
+                    event("Day 3", .system, "Daily check: 2 biomarkers below normal. Holding step 2."),
+                ],
+                team: .ridgeline, look: AvatarLook(skin: 0xC98E62, hair: .short, hairColor: 0x1E1A1A, kit: .gi(belt: Belt.black), backdrop: 0xDDEFEB),
+                squadOverride: .mmaTeen),
         Athlete(number: 63, name: "Mateo Silva", sport: "Ridgeline Academy · Blue belt", status: .recovering(step: 4),
                 detail: "Day 8 · step 4 of 6", history: [DayReading(day: 1, distance: 2.5), DayReading(day: 2, distance: 1.6), DayReading(day: 3, distance: 0.9)],
                 team: .ridgeline, squadOverride: .mmaTeen),
@@ -955,7 +971,7 @@ extension Athlete {
         }
         switch a.number {
         // Ridgeline Academy youth
-        case 51: a.lastTest = .demo(daysAgo: 1, hour: 19, minute: 40)                          // Priya: daily check due today
+        case 51, 64: a.lastTest = .demo(daysAgo: 1, hour: 19, minute: 40)                          // Priya: daily check due today
         case 52: a.baselineDate = "Sep 6"; cleared(7, 17, 20); a.sportsOverride = [.mma, .soccer]
         case 53:                                                                               // Leo: signed off, back in play
             a.baselineDate = "Aug 30"

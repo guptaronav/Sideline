@@ -16,7 +16,7 @@ struct AvatarLook: Equatable {
 
 enum Belt {
     static let white: UInt32 = 0xF4F4F0, grey: UInt32 = 0x9AA0A6, yellow: UInt32 = 0xF2D21B
-    static let orange: UInt32 = 0xF28C28, green: UInt32 = 0x22A35A
+    static let orange: UInt32 = 0xF28C28, green: UInt32 = 0x22A35A, black: UInt32 = 0x111111
 }
 
 /// Shown until a person uploads a photo: a neutral silhouette, like iOS Contacts.
