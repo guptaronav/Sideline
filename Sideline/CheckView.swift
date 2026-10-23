@@ -33,9 +33,16 @@ struct CheckView: View {
             case .intro:
                 intro
             case .position:
-                PositionView(kind: kind)
+                PositionView(
+                    kind: kind,
+                    simulationCameraAssetName: athlete?.firstName == "Priya" ? "position-priya-camera" : nil
+                )
             case .next(let i):
                 NextUpView(test: tests[i], index: i, count: tests.count) { start(i) }
+            case .test(let i) where tests[i].runsLive:
+                // Real camera test on a phone with face tracking; the scripted screen runs everywhere else.
+                LiveTestScreen(test: tests[i], index: i, count: tests.count,
+                               onDone: { completeTest(i) }, onEnd: { dismiss() })
             case .test(let i):
                 TestScreen(test: tests[i], index: i, count: tests.count, kind: kind,
                            progress: { now in progress(at: now) }, duration: Self.demoSeconds,
@@ -86,6 +93,7 @@ struct CheckView: View {
             }
             Spacer(minLength: 0)
             Button(kind == .sideline ? "Begin check" : "Start") {
+                LiveMeasurements.shared.clear()
                 phase = .position
             }
             .buttonStyle(SolidButton())
@@ -148,6 +156,7 @@ struct CheckView: View {
             guard !Task.isCancelled else { return }
             start(0)
         case .test(let i):
+            guard !tests[i].runsLive else { return }   // a live test advances when its recording ends
             while progress(at: .now) < Self.demoSeconds {
                 try? await Task.sleep(for: .milliseconds(100))
                 if Task.isCancelled { return }
@@ -155,25 +164,34 @@ struct CheckView: View {
             if willRetake(i) {
                 Self.retakeShown = true
                 phase = .retake(i)
-            } else if i + 1 < tests.count {
-                phase = .next(i + 1)
             } else {
-                finish()
-                phase = .result
+                completeTest(i)
             }
         default:
             break
         }
     }
 
+    private func completeTest(_ i: Int) {
+        if i + 1 < tests.count {
+            phase = .next(i + 1)
+        } else {
+            finish()
+            phase = .result
+        }
+    }
+
     private func finish() {
+        let measured = LiveMeasurements.shared.values
+        LiveMeasurements.shared.clear()
         switch kind {
-        case .sideline: store.flag(athleteID)
+        case .sideline:
+            if measured.isEmpty { store.flag(athleteID) } else { store.recordSidelineCheck(athleteID, measured: measured) }
         case .baseline:
-            store.recordBaseline(athleteID)
+            store.recordBaseline(athleteID, measured: measured)
             if let a = athlete { Task { await HealthPush.baseline(a, session: session) } }
         case .daily:
-            outcome = store.recordDailyCheck(athleteID)
+            outcome = store.recordDailyCheck(athleteID, measured: measured)
             if let a = athlete, let o = outcome { Task { await HealthPush.daily(a, outcome: o, decision: o.summary, session: session) } }
         }
     }
@@ -194,67 +212,101 @@ struct CheckView: View {
 /// A camera-style frame: the face outline fills as each check passes, then a 3-2-1 countdown.
 private struct PositionView: View {
     let kind: CheckKind
+    let simulationCameraAssetName: String?
     @State private var start = Date()
 
-    private static let checks = ["Face found", "Distance about 30 cm", "Light is even", "Both eyes visible"]
-    private static let perCheck = 0.6
-    private static let countdown = 3.0
-    static var length: Double { Double(checks.count) * perCheck + countdown }
+    private let sequence = PositionSequence()
+    static var length: Double { PositionSequence.length }
 
     var body: some View {
         TimelineView(.animation) { tl in
             let t = tl.date.timeIntervalSince(start)
-            let done = min(Int(t / Self.perCheck), Self.checks.count)
-            let ready = done == Self.checks.count
-            let count = max(Int(ceil(Self.length - t)), 1)
+            let state = sequence.state(at: t)
             ZStack {
-                Palette.viewport.ignoresSafeArea()
                 GeometryReader { geo in
-                    let w = min(geo.size.width * 0.62, 280)
+                    let guideWidth = min(geo.size.width * 0.84, 360)
+                    let guideHeight = guideWidth * PositionComposition.faceGuideHeightToWidth
+                    let guideCenterY = geo.size.height * 0.42
+
                     ZStack {
-                        // Stand-in for the camera feed: a dim head-and-shoulders shape inside the outline.
-                        Image(systemName: "person.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: w * 1.1)
-                            .foregroundStyle(Palette.viewportInk.opacity(0.08))
-                            .offset(y: w * 0.28)
-                        Ellipse()
-                            .stroke(ready ? Palette.steady : Palette.viewportInk.opacity(0.6),
-                                    style: StrokeStyle(lineWidth: ready ? 3 : 2, dash: ready ? [] : [7, 7]))
-                            .frame(width: w, height: w * 1.33)
-                        if ready {
-                            Text("\(count)")
-                                .font(Typeface.hero(96))
-                                .foregroundStyle(Palette.viewportInk)
-                                .contentTransition(.numericText(countsDown: true))
+                        if FaceTrackingCamera.isSupported {
+                            FaceTrackingCamera(meshOpacity: state.meshOpacity)
+                                .frame(width: geo.size.width, height: geo.size.height)
+                        } else if let simulationCameraAssetName,
+                                  let image = UIImage(named: simulationCameraAssetName) {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: geo.size.width, height: geo.size.height)
+                                .offset(y: geo.size.height * 0.07)
+                                .clipped()
+                        } else {
+                            Palette.viewport
+                            Image(systemName: "person.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: guideWidth * 0.72)
+                                .foregroundStyle(Palette.viewportInk.opacity(0.12))
                         }
+
+                        LinearGradient(
+                            colors: [.black.opacity(0.54), .clear, .clear, .black.opacity(0.68)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+
+                        if !FaceTrackingCamera.isSupported {
+                            FallbackFaceMesh()
+                                .frame(width: guideWidth * 0.95, height: guideHeight * 0.96)
+                                .position(x: geo.size.width / 2, y: guideCenterY)
+                            .opacity(state.meshOpacity)
+                        }
+
+                        Ellipse()
+                            .stroke(
+                                state.isReady ? Palette.steady : Color.white.opacity(0.86),
+                                style: StrokeStyle(
+                                    lineWidth: state.isReady ? 3 : 1.5,
+                                    dash: state.isReady ? [] : [8, 7]
+                                )
+                            )
+                            .frame(width: guideWidth, height: guideHeight)
+                            .position(x: geo.size.width / 2, y: guideCenterY)
+                            .opacity(state.meshOpacity)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .offset(y: -geo.size.height * 0.06)
+                    .frame(width: geo.size.width, height: geo.size.height)
                 }
+
                 VStack(alignment: .leading, spacing: 10) {
-                    Eyebrow(ready ? "Hold still" : "Get in position", color: ready ? Palette.steady : Palette.viewportInk.opacity(0.7))
-                    Text(ready ? "Starting in \(count)." : headline)
+                    Eyebrow(
+                        state.isReady ? "Hold still" : "Get in position",
+                        color: state.isReady ? Palette.steady : .white.opacity(0.82)
+                    )
+                    Text(state.isReady ? "Starting in \(state.countdown)." : headline)
                         .font(Typeface.display(26))
-                        .foregroundStyle(Palette.viewportInk)
+                        .foregroundStyle(.white)
                     Spacer()
                     VStack(alignment: .leading, spacing: 10) {
-                        ForEach(Array(Self.checks.enumerated()), id: \.offset) { i, item in
+                        ForEach(Array(PositionSequence.checks.enumerated()), id: \.offset) { i, item in
                             HStack(spacing: 10) {
-                                Image(systemName: i < done ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(i < done ? Palette.steady : Palette.viewportInk.opacity(0.35))
+                                Image(systemName: i < state.completedChecks ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(i < state.completedChecks ? Palette.steady : Color.white.opacity(0.48))
                                 Text(item).font(Typeface.body)
-                                    .foregroundStyle(Palette.viewportInk.opacity(i < done ? 1 : 0.55))
+                                    .foregroundStyle(.white.opacity(i < state.completedChecks ? 1 : 0.62))
                             }
                         }
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Palette.viewportInk.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+                    .background(.black.opacity(0.58), in: RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.12)))
                 }
-                .padding(Space.gutter)
+                .padding(.horizontal, Space.gutter)
+                .padding(.top, 70)
+                .padding(.bottom, Space.gutter)
             }
+            .background(Palette.viewport)
+            .ignoresSafeArea()
         }
     }
 
@@ -262,6 +314,121 @@ private struct PositionView: View {
         kind == .sideline ? "Hold steady. Sideline says “closer” or “hold there” out loud." : "Fit your face in the outline."
     }
 }
+
+/// Simulator-only stand-in for screenshots and video. Real TrueDepth devices use
+/// `ARSCNFaceGeometry` above; this dense topology mirrors its facial openings and planes.
+private struct FallbackFaceMesh: View {
+    var body: some View {
+        Canvas { context, size in
+            let rows = PositionComposition.fallbackMeshRows
+            let columns = PositionComposition.fallbackMeshColumns
+
+            func halfWidth(at y: Double) -> Double {
+                let vertical = (y - 0.49) / 0.53
+                let oval = pow(max(0, 1 - vertical * vertical), 0.56)
+                let jaw = y > 0.62 ? 1 - (y - 0.62) * 0.42 : 1
+                return 0.47 * oval * jaw
+            }
+
+            func normalizedPoint(row: Int, column: Int) -> CGPoint {
+                let baseY = 0.02 + 0.96 * Double(row) / Double(rows - 1)
+                let yJitter = row == 0 || row == rows - 1
+                    ? 0
+                    : sin(Double(row * 47 + column * 29)) * 0.007
+                let y = baseY + yJitter
+                let half = halfWidth(at: y)
+                let baseX = 0.5 - half + (half * 2 * Double(column) / Double(columns - 1))
+                let xJitter = column == 0 || column == columns - 1
+                    ? 0
+                    : sin(Double(row * 31 + column * 61)) * 0.012
+                let x = baseX + xJitter
+                return CGPoint(x: x, y: y)
+            }
+
+            func insideOpening(_ point: CGPoint) -> Bool {
+                let openings: [(Double, Double, Double, Double)] = [
+                    (0.33, 0.38, 0.105, 0.045),
+                    (0.67, 0.38, 0.105, 0.045),
+                    (0.50, 0.72, 0.155, 0.035)
+                ]
+                return openings.contains { cx, cy, rx, ry in
+                    let dx = (Double(point.x) - cx) / rx
+                    let dy = (Double(point.y) - cy) / ry
+                    return dx * dx + dy * dy < 1
+                }
+            }
+
+            func canvasPoint(_ point: CGPoint) -> CGPoint {
+                CGPoint(x: point.x * size.width, y: point.y * size.height)
+            }
+
+            func drawEdge(_ a: CGPoint, _ b: CGPoint) {
+                let midpoint = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+                guard !insideOpening(midpoint) else { return }
+                var path = Path()
+                path.move(to: canvasPoint(a))
+                path.addLine(to: canvasPoint(b))
+                context.stroke(path, with: .color(.white.opacity(0.70)), lineWidth: 0.65)
+            }
+
+            for row in 0..<rows {
+                for column in 0..<columns {
+                    let point = normalizedPoint(row: row, column: column)
+                    if column + 1 < columns {
+                        drawEdge(point, normalizedPoint(row: row, column: column + 1))
+                    }
+                    if row + 1 < rows {
+                        drawEdge(point, normalizedPoint(row: row + 1, column: column))
+                        if row.isMultiple(of: 2), column + 1 < columns {
+                            drawEdge(point, normalizedPoint(row: row + 1, column: column + 1))
+                        } else if !row.isMultiple(of: 2), column > 0 {
+                            drawEdge(point, normalizedPoint(row: row + 1, column: column - 1))
+                        }
+                    }
+
+                    guard !insideOpening(point) else { continue }
+                    let p = canvasPoint(point)
+                    let dot = CGRect(x: p.x - 0.7, y: p.y - 0.7, width: 1.4, height: 1.4)
+                    context.fill(Path(ellipseIn: dot), with: .color(.white.opacity(0.88)))
+                }
+            }
+
+            let contours: [CGRect] = [
+                CGRect(x: 0.225, y: 0.335, width: 0.21, height: 0.09),
+                CGRect(x: 0.565, y: 0.335, width: 0.21, height: 0.09),
+                CGRect(x: 0.345, y: 0.685, width: 0.31, height: 0.07)
+            ]
+            for contour in contours {
+                let rect = CGRect(
+                    x: contour.minX * size.width,
+                    y: contour.minY * size.height,
+                    width: contour.width * size.width,
+                    height: contour.height * size.height
+                )
+                context.stroke(Path(ellipseIn: rect), with: .color(.white.opacity(0.9)), lineWidth: 0.9)
+            }
+
+            var nose = Path()
+            nose.move(to: canvasPoint(CGPoint(x: 0.50, y: 0.40)))
+            nose.addLine(to: canvasPoint(CGPoint(x: 0.43, y: 0.60)))
+            nose.addLine(to: canvasPoint(CGPoint(x: 0.50, y: 0.64)))
+            nose.addLine(to: canvasPoint(CGPoint(x: 0.57, y: 0.60)))
+            nose.closeSubpath()
+            context.stroke(nose, with: .color(.white.opacity(0.82)), lineWidth: 0.8)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+#if DEBUG
+/// Launch with `-positionDemo` to capture the simulator fallback without tapping through the app.
+struct PositionPreviewHost: View {
+    var body: some View {
+        PositionView(kind: .baseline, simulationCameraAssetName: "position-priya-camera")
+    }
+}
+#endif
 
 // MARK: - Between tests
 

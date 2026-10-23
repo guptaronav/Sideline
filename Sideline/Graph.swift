@@ -108,7 +108,7 @@ enum CheckKind {
 /// Domain flags: saccade < 350 deg/s, pursuit < 0.80, gaze stabilization < 95 deg/s, blink < 10 or > 25 /min.
 /// 3+ flags -> 0.75, 1-2 -> 0.40, none -> 0.05. Status planned, unvalidated, expected AUC 0.73.
 struct ConcussionModel {
-    struct Input {
+    struct Input: Equatable {
         var saccadeVelocity: Double     // BMK-00080, deg/s
         var pursuitGain: Double         // BMK-00084
         var gazeStabilization: Double?  // BMK-00159, not built
@@ -180,7 +180,7 @@ struct BiomarkerSpec: Identifiable {
     }
 
     /// Value for one day, using that day's per-biomarker reading when it has one.
-    func value(_ r: DayReading) -> Double { value(distance: r.lagging[code] ?? r.distance) }
+    func value(_ r: DayReading) -> Double { r.measured[code] ?? value(distance: r.lagging[code] ?? r.distance) }
 
     /// Back at the athlete's own normal: within 15% of the gap between their baseline and their injury-day value.
     /// A value that displays the same as the baseline also counts, so the label never contradicts the number shown.

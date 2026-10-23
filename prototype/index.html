@@ -541,7 +541,7 @@ const DAILY = {
 };
 
 const PERSONAS = {
-  dana:   {name:'Dana Whitfield', ini:'DW', group:'Coach', role:'Head coach, Empower MMA youth team', kind:'coach', team:'dana'},
+  dana:   {name:'Dana Whitfield', ini:'DW', group:'Coach', role:'Head coach, Ridgeline Academy youth team', kind:'coach', team:'dana'},
   marcus: {name:'Marcus Bell', ini:'MB', group:'Coach', role:'Athletic trainer, college men’s basketball', kind:'coach', team:'marcus'},
   priya:  {name:'Priya Nair', ini:'PN', group:'Player', role:'13, green belt. Second concussion.', kind:'player', player:'priya'},
   jalen:  {name:'Jalen Brooks', ini:'JB', group:'Player', role:'20, point guard. Hoping to go pro.', kind:'player', player:'jalen'},
@@ -549,10 +549,10 @@ const PERSONAS = {
   okafor: {name:'Dr. Tom Okafor', ini:'TO', group:'Clinician', role:'Team physician, Chesapeake State. iPad app.', kind:'okafor'}
 };
 const TEAMS = {
-  dana:   {school:'Empower MMA', team:'Youth MMA team, ages 11–14', staff:'Coach Whitfield', clinic:null, mark:'MMA', eventWord:'tournament',
+  dana:   {school:'Ridgeline Academy', team:'Youth martial arts, ages 11–14', staff:'Coach Whitfield', clinic:null, mark:'RA', eventWord:'tournament',
            event:'Spring Youth Open · grappling, round 2', ruleShort:'Club policy, Maryland law',
-           rule:'Empower MMA policy, matching Maryland youth sports law: written clearance by a licensed physician, or a PA or NP working under a physician.',
-           atNo:'Under Empower MMA policy, matching Maryland youth sports law, an athletic trainer cannot sign clearance.', colors:['#7C3AED','#FFC93C'], avbg:'#2A1B4D'},
+           rule:'Ridgeline Academy policy, matching Maryland youth sports law: written clearance by a licensed physician, or a PA or NP working under a physician.',
+           atNo:'Under Ridgeline Academy policy, matching Maryland youth sports law, an athletic trainer cannot sign clearance.', colors:['#7C3AED','#FFC93C'], avbg:'#2A1B4D'},
   marcus: {school:'Chesapeake State University', team:'Men’s basketball', staff:'Marcus Bell, ATC', clinic:'Chesapeake State Sports Medicine', mark:'CSU', eventWord:'game',
            event:'Conference game vs. Coastal Tech · 2nd half', ruleShort:'NCAA protocol',
            rule:'NCAA concussion protocol: the team physician, or a physician they designate, makes the return-to-play decision.',
@@ -625,9 +625,9 @@ const dlong = d => dateOf(d).toLocaleDateString('en-US',{weekday:'short',month:'
 const clock = () => S.day === 0 ? '7:42 PM' : S.day < 0 ? '3:30 PM' : '4:10 PM';
 
 function seedMsgs(){ return [
-  {day:-1, when:'Aug 10', ch:'Email', to:'Families, Empower MMA youth team (16)', text:'Maryland concussion information sheet, and consent for your child to record a Sideline baseline. 15 of 16 families have signed.'},
+  {day:-1, when:'Aug 10', ch:'Email', to:'Families, Ridgeline Academy youth team (16)', text:'Maryland concussion information sheet, and consent for your child to record a Sideline baseline. 15 of 16 families have signed.'},
   {day:-1, when:'Aug 12', ch:'Email', to:'Chesapeake State men’s basketball (15 athletes)', text:'NCAA concussion education and Sideline baseline consent. 15 of 15 athletes have signed.'},
-  {day:-1, when:'Aug 17', ch:'Text', to:'Parent of Casey Lin', text:'Empower MMA: please sign the concussion information sheet so Casey can record a baseline before the first tournament. Link: sideline.health/c/8H2'}
+  {day:-1, when:'Aug 17', ch:'Text', to:'Parent of Casey Lin', text:'Ridgeline Academy: please sign the concussion information sheet so Casey can record a baseline before the first tournament. Link: sideline.health/c/8H2'}
 ]; }
 function seedLog(){ return [
   {day:-1, when:'Aug 14', team:'marcus', text:'Men’s basketball baseline session: 14 of 15 recorded. Jalen Brooks flagged for review. Eli Becker needs a retake (glare).'},
@@ -1125,7 +1125,7 @@ function okaforPhone(){
 /* ===== rail, outbox ===== */
 function guideText(){
   const pc = caseFor('priya'), ps = pc ? cstate(pc) : null, jc = caseFor('jalen');
-  if (!S.signedIn) return 'The app opens on sign-in. Each demo account is a different person, and each sees only their own app. Start by signing in as Dana Whitfield, Empower MMA’s coach.';
+  if (!S.signedIn) return 'The app opens on sign-in. Each demo account is a different person, and each sees only their own app. Start by signing in as Dana Whitfield, Ridgeline Academy’s coach.';
   switch (S.persona){
     case 'dana':
       if (S.day < 0) return 'Preseason. Casey Lin has no baseline because the family hasn’t signed consent. Move to tournament day to run a check.';
@@ -1164,7 +1164,7 @@ function renderRail(){
   h += '<div class="panel"><span class="label">Shortcuts</span><div class="jumps"><button data-act="jump" data-arg="game">Game day, before the hit</button><button data-act="jump" data-arg="d6">Priya, day 6: a setback</button><button data-act="jump" data-arg="d9">Priya, day 9: ready for review</button><button data-act="jump" data-arg="pre">Preseason baselines (Marcus)</button><button data-act="jump" data-arg="reset">Start over</button></div>' +
     '<label class="toggle" for="snd"><input type="checkbox" id="snd"' + (S.sound ? ' checked' : '') + '> Sound cues during checks</label></div>';
   h += '<div class="panel"><span class="label">From the knowledge graph</span><p class="chainline">SRC → TST → OBS → CMP → FTR → BMK → MDL → CND</p><p class="small">' + Object.keys(SENSORS).length + ' sensors, ' + Object.keys(TESTS).length + ' tests, ' + Object.keys(OBS).length + ' observations, ' + BMK.length + ' biomarkers, 1 model, 4 conditions (CND-00066, CND-00002, CND-00220, CND-00260).</p><p class="fine">' + SNAPSHOT + '. Model is planned and unvalidated. Gaze stabilization is not built.</p></div>';
-  h += '<p class="fine">Sideline does not diagnose concussion and never clears anyone to play. People and measurements are demo data. Clearance rules: Empower MMA policy (matching Maryland youth sports law) for the youth team, the NCAA protocol for basketball.</p>';
+  h += '<p class="fine">Sideline does not diagnose concussion and never clears anyone to play. People and measurements are demo data. Clearance rules: Ridgeline Academy policy (matching Maryland youth sports law) for the youth team, the NCAA protocol for basketball.</p>';
   document.getElementById('rail').innerHTML = h;
 }
 function renderOutbox(){
@@ -1281,11 +1281,11 @@ render();
 <script>// Coach and player journey maps. Rendered at runtime so they can use the demo's avatars and jump into the demo.
 (function(){
 var J = [
-  {id:'coach', title:'Coach journey', who:'Dana Whitfield, head coach, Empower MMA youth team (ages 11–14). Variant: Marcus Bell, athletic trainer, Chesapeake State men’s basketball.',
+  {id:'coach', title:'Coach journey', who:'Dana Whitfield, head coach, Ridgeline Academy youth team (ages 11–14). Variant: Marcus Bell, athletic trainer, Chesapeake State men’s basketball.',
    faces:['dana','marcus'], stages:[
-    {t:'Set up the season', when:'August', moment:'Dana starts the youth season at Empower MMA. Marcus starts preseason for men’s basketball.',
+    {t:'Set up the season', when:'August', moment:'Dana starts the youth season at Ridgeline Academy. Marcus starts preseason for men’s basketball.',
      does:'Creates the team, confirms whose rules apply, imports the roster.',
-     app:'Sets the clearance rule from the team type: club policy matching Maryland youth sports law for Empower MMA, the NCAA protocol for Chesapeake State. Sends the concussion information sheet and consent.',
+     app:'Sets the clearance rule from the team type: club policy matching Maryland youth sports law for Ridgeline Academy, the NCAA protocol for Chesapeake State. Sends the concussion information sheet and consent.',
      feel:3, feeling:'One more thing to set up before the season.', design:'A short setup. The roster shows who has not consented yet.',
      diff:'Youth: parents consent; under-13s need verifiable parental consent (COPPA). College: athletes consent themselves.', go:{persona:'dana', day:-1}},
     {t:'Baseline day', when:'Before the first event', moment:'Every athlete records a baseline.',
@@ -1319,7 +1319,7 @@ var J = [
      app:'Notifies the coach, records the clinician’s name, credential and licence, and closes the case after step 6.',
      feel:5, feeling:'Confident the return was done properly.', design:'Only a clinician allowed by the team’s rules can sign.', go:{case:true, persona:'dana', day:9}}
   ]},
-  {id:'player', title:'Player journey', who:'Priya Nair, 13, green belt, Empower MMA. Second concussion. Variant: Jalen Brooks, 20, point guard, Chesapeake State, hoping to go pro.',
+  {id:'player', title:'Player journey', who:'Priya Nair, 13, green belt, Ridgeline Academy. Second concussion. Variant: Jalen Brooks, 20, point guard, Chesapeake State, hoping to go pro.',
    faces:['priya','jalen'], stages:[
     {t:'Baseline', when:'Preseason', moment:'On their own phone, before the first event.',
      does:'Records a 3-minute baseline: watch the flashes, follow a dot, hold still, read a moving letter.',

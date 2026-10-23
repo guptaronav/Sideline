@@ -315,6 +315,8 @@ struct DayReading: Identifiable, Equatable {
     let distance: Double
     /// Biomarkers that sit further from normal than the rest that day, by catalog code.
     var lagging: [String: Double] = [:]
+    /// Values measured live by the phone's camera that day, by catalog code. They replace the scripted value.
+    var measured: [String: Double] = [:]
     var id: Int { day }
 }
 
@@ -366,6 +368,10 @@ struct Athlete: Identifiable, Equatable {
     var hasBaseline = true
     /// The athlete's one personal baseline, by date. It isn't tied to a team, season or sport.
     var baselineDate: String? = nil
+    /// Baseline values measured live by the phone's camera, by catalog code. They replace the scripted normal.
+    var measuredBaseline: [String: Double] = [:]
+    /// The concussion model's input from this athlete's latest sideline check.
+    var sidelineInput: ConcussionModel.Input = ConcussionModel.concussed
     var dailyChecks = 0
     /// Today's daily check is done; the next one opens tomorrow morning.
     var checkedToday = false
@@ -383,6 +389,7 @@ struct Athlete: Identifiable, Equatable {
     /// This athlete's biomarkers against their own baseline. The spread is fixed per athlete so it's the same every run.
     var biomarkers: [BiomarkerSpec] {
         BiomarkerSpec.tracked.enumerated().map { k, spec in
+            if let measured = measuredBaseline[spec.code] { return spec.personal(measured - spec.baseline) }
             let r = sin(Double(number * 37 + k * 101))
             return spec.personal(r * (BiomarkerSpec.spread[spec.code] ?? 0))
         }
@@ -638,6 +645,45 @@ final class Store {
 
     // Coach
 
+    /// A sideline check measured live. Removes the athlete from play when the concussion model flags any
+    /// area or the emergency rule fires; otherwise records a cleared check. Returns whether they were removed.
+    @discardableResult
+    func recordSidelineCheck(_ id: Int, measured: [String: Double]) -> Bool {
+        guard let a = athlete(id) else { return true }
+        let specs = Dictionary(uniqueKeysWithValues: a.biomarkers.map { ($0.code, $0) })
+        func v(_ code: String) -> Double { measured[code] ?? specs[code]?.baseline ?? 0 }
+        let input = ConcussionModel.Input(saccadeVelocity: v("BMK-00080"), pursuitGain: v("BMK-00084"),
+                                          gazeStabilization: nil, blinkRate: v("BMK-00006"),
+                                          pupilAsymmetry: v("BMK-00075"))
+        let flags = ConcussionModel.flags(input).count
+        let removed = flags > 0 || ConcussionModel.isEmergency(input)
+        let p = String(format: "%.2f", ConcussionModel.probability(input))
+        let metrics: [Metric] = [("BMK-00080", "Fast eye movement · Follow the Dot", 40.0),
+                                 ("BMK-00084", "Eye tracking · Follow the Dot", 0.06),
+                                 ("BMK-00006", "Blink rate · Hold & Look", 4.0),
+                                 ("BMK-00075", "Pupil size difference · Light Response", 0.2)].compactMap { code, name, tol in
+            guard let today = measured[code], let spec = specs[code] else { return nil }
+            return Metric(name: name, unit: spec.unit, baseline: spec.baseline, today: today, tolerance: tol, decimals: spec.decimals)
+        }
+        update(id) {
+            var copy = $0
+            copy.sidelineInput = input
+            copy.injuryMetrics = metrics
+            copy.lastTest = .now
+            if removed {
+                copy.status = .flagged
+                copy.detail = "Removed from play just now"
+                copy.lastTestNote = nil
+                copy.events.append(event("Just now", .coach, "Removed from play after sideline check. Model \(p): \(flags) of 4 domains flagged."))
+            } else {
+                copy.lastTestNote = "Sideline check cleared"
+                copy.events.append(event("Just now", .coach, "Sideline check after a hit: nothing flagged. Stayed in play."))
+            }
+            return copy
+        }
+        return removed
+    }
+
     func flag(_ id: Int) {
         update(id) {
             var copy = $0.updating(
@@ -666,12 +712,13 @@ final class Store {
 
     // Athlete
 
-    func recordBaseline(_ id: Int) {
+    func recordBaseline(_ id: Int, measured: [String: Double] = [:]) {
         update(id) {
             var copy = $0.updating(status: $0.status, detail: "Baseline Oct 25",
                                    event: event("Just now", .athlete, "Baseline recorded: 3 tests captured, 1 practice. It covers every sport."))
             copy.hasBaseline = true
             copy.baselineDate = "Oct 25"
+            copy.measuredBaseline = measured
             copy.lastTest = .now
             return copy
         }
@@ -681,13 +728,25 @@ final class Store {
     /// A check at normal moves the athlete up one step (up to step 4); the provider signs before step 5.
     @discardableResult
     /// Demo script: the first daily check leaves smooth pursuit gain short of normal; later checks are clean.
-    func recordDailyCheck(_ id: Int) -> DailyOutcome? {
+    func recordDailyCheck(_ id: Int, measured: [String: Double] = [:]) -> DailyOutcome? {
         guard let a = athlete(id) else { return nil }
-        let clean = a.dailyChecks >= 1
         let before = a.currentStep ?? 1
         let day = a.history.count + 1
-        let reading = clean ? DayReading(day: day, distance: 0.8)
+        let clean: Bool
+        let reading: DayReading
+        if measured.isEmpty {
+            // Scripted: the first check leaves pursuit gain short of normal; later checks are clean.
+            clean = a.dailyChecks >= 1
+            reading = clean ? DayReading(day: day, distance: 0.8)
                             : DayReading(day: day, distance: 0.8, lagging: ["BMK-00084": 1.6])
+        } else {
+            // Measured live: clean only if every measured biomarker is back at this athlete's normal.
+            reading = DayReading(day: day, distance: 0.8, measured: measured)
+            clean = a.biomarkers.allSatisfy { spec in
+                guard let v = measured[spec.code] else { return true }
+                return spec.isAtNormal(v) && !spec.isFlagged(v)
+            }
+        }
         update(id) {
             var copy = $0
             copy.dailyChecks += 1

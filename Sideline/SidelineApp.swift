@@ -20,13 +20,26 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            switch session.role {
-            case .none:      RoleGateView()
-            case .athlete:   AthleteDashboardView()
-            case .coach:     RosterView()
-            case .provider:  ProviderDashboardView()
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("-positionDemo") {
+                PositionPreviewHost()
+            } else {
+                destination
             }
+            #else
+            destination
+            #endif
         }
         .animation(.easeOut(duration: 0.2), value: session.role)
+    }
+
+    @ViewBuilder
+    private var destination: some View {
+        switch session.role {
+        case .none:      RoleGateView()
+        case .athlete:   AthleteDashboardView()
+        case .coach:     RosterView()
+        case .provider:  ProviderDashboardView()
+        }
     }
 }

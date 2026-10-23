@@ -13,8 +13,8 @@ struct ResultView: View {
                 VStack(alignment: .leading, spacing: Space.section) {
                     verdict(athlete)
                     measures(athlete)
-                    actions
-                    Text("Sideline flags possible concussion signs from eye and pupil measurements. It does not diagnose. Values shown are simulated.")
+                    if athlete.status == .flagged { actions } else { Button("Done", action: onDone).buttonStyle(SolidButton()) }
+                    Text("Sideline flags possible concussion signs from eye and pupil measurements. It does not diagnose.")
                         .font(Typeface.caption)
                         .foregroundStyle(Palette.muted)
                 }
@@ -26,20 +26,28 @@ struct ResultView: View {
 
     private func verdict(_ athlete: Athlete) -> some View {
         let outside = athlete.injuryMetrics.filter(\.isOutsideRange).count
+        let input = athlete.sidelineInput
+        let removed = athlete.status == .flagged
         return VStack(alignment: .leading, spacing: 12) {
-            Eyebrow("#\(athlete.number) \(athlete.name) · sideline check", color: Palette.flag)
-            Text("Remove from play.")
+            Eyebrow("#\(athlete.number) \(athlete.name) · sideline check", color: removed ? Palette.flag : Palette.steady)
+            Text(removed ? "Remove from play." : "Nothing flagged.")
                 .font(Typeface.display(44))
                 .foregroundStyle(Palette.ink)
-            Rectangle().fill(Palette.flag).frame(width: 56, height: 4)
-            Text("Do not return to activity until a healthcare provider has evaluated \(athlete.firstName).")
+            Rectangle().fill(removed ? Palette.flag : Palette.steady).frame(width: 56, height: 4)
+            Text(removed ? "Do not return to activity until a healthcare provider has evaluated \(athlete.firstName)."
+                         : "No measured sign crossed a threshold. Watch \(athlete.firstName) closely and recheck if anything changes.")
                 .font(Typeface.body)
                 .foregroundStyle(Palette.ink)
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Concussion model \(String(format: "%.2f", ConcussionModel.probability(ConcussionModel.concussed))) · \(ConcussionModel.flags(ConcussionModel.concussed).count) of 4 areas flagged")
-                    .font(Typeface.mono(14, weight: .semibold))
+            if ConcussionModel.isEmergency(input) {
+                Label("Pupils differ by more than 1 mm. Call emergency services now.", systemImage: Icon.alert)
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Palette.flag)
-                ForEach(ConcussionModel.flags(ConcussionModel.concussed)) { flag in
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Concussion model \(String(format: "%.2f", ConcussionModel.probability(input))) · \(ConcussionModel.flags(input).count) of 4 areas flagged")
+                    .font(Typeface.mono(14, weight: .semibold))
+                    .foregroundStyle(removed ? Palette.flag : Palette.steady)
+                ForEach(ConcussionModel.flags(input)) { flag in
                     Text("• \(flag.text) (\(flag.test.name))")
                         .font(Typeface.caption)
                         .foregroundStyle(Palette.ink)

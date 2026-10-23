@@ -24,5 +24,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.sideline.mock
         CODE_SIGN_ENTITLEMENTS: Sideline/Sideline.entitlements
+        INFOPLIST_KEY_NSCameraUsageDescription: "Sideline uses the front camera to measure eye movement and pupil response during each check."
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Sideline reads your sleep, heart rate and workouts as recovery context, and to check activity stays within your return-to-sport step."
         INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Sideline saves each check and your baseline to Health as a clinical document with your biomarker results."
