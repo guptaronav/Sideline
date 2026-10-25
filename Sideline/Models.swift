@@ -624,8 +624,17 @@ final class Session {
         switch UserDefaults.standard.string(forKey: "demoAccount") ?? "" {
         case "player": .priya
         case "doctor": .okafor
-        case let id: DemoAccount(rawValue: id) ?? .sid
+        case let id: DemoAccount(rawValue: id) ?? defaultAccount
         }
+    }
+
+    /// With no launch argument: Sid in the simulator; on a real iPhone, Ronav, so a live check runs on him.
+    private static var defaultAccount: DemoAccount {
+        #if targetEnvironment(simulator)
+        .sid
+        #else
+        .ronav
+        #endif
     }
     var role: Role? { account?.role }
     var athleteID: Int { athleteOverride ?? account?.athleteID ?? 51 }
