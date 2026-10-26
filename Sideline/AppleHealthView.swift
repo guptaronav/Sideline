@@ -3,7 +3,8 @@ import OSLog
 
 // Apple Health. Push is real HealthKit (HealthBridge): the iOS permission sheet, then each check and the baseline
 // saved to Health as a clinical document carrying the five biomarkers. Health has no native type for them.
-// Pull is demo data (HealthSnapshot): sleep, heart rate variability, resting heart rate and workouts. Measured only.
+// Pull is real HealthKit too (HealthReader): sleep, heart rate variability, resting heart rate and workouts.
+// Anything Health doesn't have shows as "No data in Health", never a made-up value.
 
 enum HealthColor {
     /// The Health app's own heart color, used only for Apple Health identity.
@@ -25,41 +26,14 @@ struct HealthMark: View {
     }
 }
 
-/// What the demo reads from Health for one athlete.
-struct HealthSnapshot {
-    struct Workout: Identifiable {
-        let name: String
-        let symbol: String
-        let minutes: Int
-        let avgHR: Int
-        let when: String
-        var id: String { name + when }
-    }
-
-    let sleep: String
-    let sleepUsual: String
-    let hrv: Int
-    let hrvUsual: Int
-    let restingHR: Int
-    let restingUsual: Int
-    let workouts: [Workout]
-    let age: Int
-
-    /// Return-to-sport step 2 keeps aerobic work to about 70% of maximum heart rate (Tanaka: 208 − 0.7 × age).
-    var stepTwoCap: Int { Int((Double(208) - 0.7 * Double(age)) * 0.7) }
-
-    static func of(_ athlete: Athlete) -> HealthSnapshot {
-        athlete.team == .chesapeake
-            ? HealthSnapshot(sleep: "7 h 05 m", sleepUsual: "7 h 40 m", hrv: 82, hrvUsual: 88, restingHR: 54, restingUsual: 51,
-                             workouts: [Workout(name: "Stationary bike", symbol: "figure.indoor.cycle", minutes: 25, avgHR: 128, when: "Today, 3:40 PM"),
-                                        Workout(name: "Walk", symbol: "figure.walk", minutes: 40, avgHR: 101, when: "Yesterday")],
-                             age: 20)
-            : HealthSnapshot(sleep: "8 h 46 m", sleepUsual: "9 h 10 m", hrv: 64, hrvUsual: 71, restingHR: 61, restingUsual: 58,
-                             workouts: [Workout(name: "Stationary bike", symbol: "figure.indoor.cycle", minutes: 20, avgHR: 121, when: "Today, 4:10 PM"),
-                                        Workout(name: "Walk", symbol: "figure.walk", minutes: 32, avgHR: 104, when: "Yesterday")],
-                             age: 13)
-    }
+/// Return-to-sport step 2 keeps aerobic work to about 70% of maximum heart rate (Tanaka: 208 − 0.7 × age).
+func stepTwoHeartRateCap(_ athlete: Athlete) -> Int {
+    let age: Double = athlete.team == .chesapeake ? 20 : athlete.squad == .mmaTeen ? 15 : 13
+    return Int((208 - 0.7 * age) * 0.7)
 }
+
+/// "No data in Health" for anything Health can't supply.
+private let noData = "No data"
 
 // MARK: - Connect sheet
 
@@ -135,6 +109,7 @@ struct HealthAccessSheet: View {
         await HealthBridge.requestAccess(write: !write.isEmpty, read: !read.isEmpty)
         let canWrite = HealthBridge.canWrite
         session.health = HealthLink(write: canWrite ? write : [], read: read)
+        if !read.isEmpty { await HealthReader.shared.refresh() }
         if canWrite, let athlete = store.athlete(session.athleteID), athlete.hasBaseline {
             await HealthPush.baseline(athlete, session: session)
         }
@@ -193,12 +168,15 @@ struct AppleHealthView: View {
         }
         .navigationTitle("Apple Health")
         .navigationBarTitleDisplayMode(.inline)
+        .task { if session.health?.read.isEmpty == false { await HealthReader.shared.refresh() } }
+        .refreshable { await HealthReader.shared.refresh() }
         .sheet(isPresented: $showAccess) { HealthAccessSheet() }
     }
 
     @ViewBuilder
     private func connected(_ link: HealthLink, _ athlete: Athlete) -> some View {
-        let snap = HealthSnapshot.of(athlete)
+        let r = HealthReader.shared.readings
+        let cap = stepTwoHeartRateCap(athlete)
         Section {
             if let error = session.healthError {
                 Text("Couldn't save to Health: \(error)").font(Typeface.caption).foregroundStyle(Palette.flag)
@@ -228,18 +206,19 @@ struct AppleHealthView: View {
         }
         if !link.read.isEmpty {
             Section("From Health") {
-                if link.read.contains("Sleep") { stat("bed.double.fill", Color(hex: 0x5AC8FA), "Sleep last night", snap.sleep, "Usual \(snap.sleepUsual)") }
-                if link.read.contains("Heart Rate Variability") { stat("waveform.path.ecg", HealthColor.heart, "Heart rate variability", "\(snap.hrv) ms", "Usual \(snap.hrvUsual) ms") }
-                if link.read.contains("Resting Heart Rate") { stat("heart.fill", HealthColor.heart, "Resting heart rate", "\(snap.restingHR) bpm", "Usual \(snap.restingUsual) bpm") }
+                if link.read.contains("Sleep") { stat("bed.double.fill", Color(hex: 0x5AC8FA), "Sleep last night", r.sleepLastNight?.sleepText, r.sleepUsual.map { "Usual \($0.sleepText)" }) }
+                if link.read.contains("Heart Rate Variability") { stat("waveform.path.ecg", HealthColor.heart, "Heart rate variability", r.hrv.map { "\(Int($0.rounded())) ms" }, r.hrvUsual.map { "Usual \(Int($0.rounded())) ms" }) }
+                if link.read.contains("Resting Heart Rate") { stat("heart.fill", HealthColor.heart, "Resting heart rate", r.restingHR.map { "\(Int($0.rounded())) bpm" }, r.restingUsual.map { "Usual \(Int($0.rounded())) bpm" }) }
             }
             if link.read.contains("Workouts") {
                 Section {
-                    ForEach(snap.workouts) { HealthWorkoutRow(workout: $0, cap: snap.stepTwoCap, step: athlete.currentStep) }
+                    if r.workouts.isEmpty { Text("No workouts in Health").foregroundStyle(Palette.muted) }
+                    ForEach(r.workouts) { HealthWorkoutRow(workout: $0, cap: cap, step: athlete.currentStep) }
                 } header: {
                     Text("Workouts")
                 } footer: {
                     if let step = athlete.currentStep, step <= 2 {
-                        Text("Step \(step) keeps exercise under about 70% of your maximum heart rate: \(snap.stepTwoCap) bpm.")
+                        Text("Step \(step) keeps exercise under about 70% of your maximum heart rate: \(cap) bpm.")
                     }
                 }
             }
@@ -250,14 +229,15 @@ struct AppleHealthView: View {
         }
     }
 
-    private func stat(_ symbol: String, _ tint: Color, _ title: String, _ value: String, _ usual: String) -> some View {
+    private func stat(_ symbol: String, _ tint: Color, _ title: String, _ value: String?, _ usual: String?) -> some View {
         HStack(spacing: 12) {
             IconTile(symbol: symbol, tint: tint, size: 28)
             Text(title)
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(value).font(.system(size: 16, weight: .semibold, design: .rounded))
-                Text(usual).font(Typeface.caption).foregroundStyle(Palette.muted)
+                Text(value ?? noData).font(.system(size: 16, weight: value == nil ? .regular : .semibold, design: .rounded))
+                    .foregroundStyle(value == nil ? Palette.muted : Palette.ink)
+                if let usual { Text(usual).font(Typeface.caption).foregroundStyle(Palette.muted) }
             }
         }
     }
@@ -265,20 +245,20 @@ struct AppleHealthView: View {
 }
 
 struct HealthWorkoutRow: View {
-    let workout: HealthSnapshot.Workout
+    let workout: HealthReader.Workout
     let cap: Int
     let step: Int?
 
     var body: some View {
-        let within = workout.avgHR <= cap
+        let within = (workout.avgHR ?? 0) <= cap
         HStack(spacing: 12) {
             IconTile(symbol: workout.symbol, tint: Color(hex: 0x34C759), size: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(workout.name) · \(workout.minutes) min").font(.system(size: 15, weight: .semibold)).foregroundStyle(Palette.ink)
-                Text("\(workout.when) · avg \(workout.avgHR) bpm").font(Typeface.caption).foregroundStyle(Palette.muted)
+                Text(workout.avgHR.map { "\(workout.when) · avg \($0) bpm" } ?? workout.when).font(Typeface.caption).foregroundStyle(Palette.muted)
             }
             Spacer()
-            if let step, step <= 2 {
+            if let step, step <= 2, workout.avgHR != nil {
                 Text(within ? "Within step \(step)" : "Above step \(step)")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(within ? Palette.steady : Palette.flag)
@@ -321,30 +301,36 @@ struct HealthCard: View {
     }
 
     private func connected(_ link: HealthLink) -> some View {
-        let snap = HealthSnapshot.of(athlete)
+        let r = HealthReader.shared.readings
         return VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 8) {
                 HealthMark(size: 22)
                 Eyebrow("From Apple Health")
             }
             HStack(alignment: .top, spacing: 0) {
-                if link.read.contains("Sleep") { tile("Sleep", snap.sleep, "usual \(snap.sleepUsual)") }
-                if link.read.contains("Heart Rate Variability") { tile("HRV", "\(snap.hrv) ms", "usual \(snap.hrvUsual)") }
-                if link.read.contains("Resting Heart Rate") { tile("Resting HR", "\(snap.restingHR) bpm", "usual \(snap.restingUsual)") }
+                if link.read.contains("Sleep") { tile("Sleep", r.sleepLastNight?.sleepText, r.sleepUsual.map { "usual \($0.sleepText)" }) }
+                if link.read.contains("Heart Rate Variability") { tile("HRV", r.hrv.map { "\(Int($0.rounded())) ms" }, r.hrvUsual.map { "usual \(Int($0.rounded()))" }) }
+                if link.read.contains("Resting Heart Rate") { tile("Resting HR", r.restingHR.map { "\(Int($0.rounded())) bpm" }, r.restingUsual.map { "usual \(Int($0.rounded()))" }) }
             }
-            if link.read.contains("Workouts"), let latest = snap.workouts.first {
+            if link.read.contains("Workouts") {
                 Rectangle().fill(Palette.rule).frame(height: 1)
-                HealthWorkoutRow(workout: latest, cap: snap.stepTwoCap, step: athlete.currentStep)
+                if let latest = r.workouts.first {
+                    HealthWorkoutRow(workout: latest, cap: stepTwoHeartRateCap(athlete), step: athlete.currentStep)
+                } else {
+                    Text("No workouts in Health").font(Typeface.caption).foregroundStyle(Palette.muted)
+                }
             }
         }
         .panel()
+        .task { await HealthReader.shared.refresh() }
     }
 
-    private func tile(_ title: String, _ value: String, _ usual: String) -> some View {
+    private func tile(_ title: String, _ value: String?, _ usual: String?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(Typeface.caption).foregroundStyle(Palette.muted)
-            Text(value).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(Palette.ink)
-            Text(usual).font(.system(size: 11)).foregroundStyle(Palette.muted)
+            Text(value ?? noData).font(.system(size: value == nil ? 15 : 18, weight: value == nil ? .regular : .semibold, design: .rounded))
+                .foregroundStyle(value == nil ? Palette.muted : Palette.ink)
+            if let usual { Text(usual).font(.system(size: 11)).foregroundStyle(Palette.muted) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -366,7 +352,7 @@ struct SavedToHealth: View {
 
 /// Builds the biomarker rows for a check and saves them to Health. Records the send on success only.
 enum HealthPush {
-    private static let log = Logger(subsystem: "org.sideline.mock", category: "health")
+    private static let log = Logger(subsystem: "com.oculodx.sideline", category: "health")
 
     @MainActor
     static func daily(_ athlete: Athlete, outcome: DailyOutcome, decision: String, session: Session) async {

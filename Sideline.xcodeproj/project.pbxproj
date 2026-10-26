@@ -31,6 +31,7 @@
 		99CE70E7A72FD385215858A3 /* AppleHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C17794A143E9217A3F8F3F /* AppleHealthView.swift */; };
 		AF4D5901989C7890740BEF76 /* SaccadePeakVelocityV1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD08F8EBF25C764BF9317F9 /* SaccadePeakVelocityV1.swift */; };
 		B048CCEC6FCE033BC6CE2D73 /* ReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C014638D9CFDD7DBA6C00271 /* ReportView.swift */; };
+		BE360E021275DC823C6B8756 /* HealthReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9A41CDDBCA29BBB4E54CEDA /* HealthReader.swift */; };
 		C0A65F85381120F19F8E3F72 /* RecoveryComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49AA4EA0239D7825F3AE8BF /* RecoveryComponents.swift */; };
 		C97A6EAE6A0A5044A7763FE1 /* HealthBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A34BEF2BCB6CE04F6B51004B /* HealthBridge.swift */; };
 		C9FB38EDE44F3C9CB509A09D /* Avatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0961B529420EE7AA45D16F26 /* Avatar.swift */; };
@@ -73,6 +74,7 @@
 		C9CAD7792F5D31FE4209A780 /* RosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterView.swift; sourceTree = "<group>"; };
 		CC00EAF9E408A2DA5D710E6C /* PupilAsymmetryV1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupilAsymmetryV1.swift; sourceTree = "<group>"; };
 		D49AA4EA0239D7825F3AE8BF /* RecoveryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryComponents.swift; sourceTree = "<group>"; };
+		D9A41CDDBCA29BBB4E54CEDA /* HealthReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthReader.swift; sourceTree = "<group>"; };
 		E15BEA8BCA4AE3AC8DEFB31E /* ProviderDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderDashboardView.swift; sourceTree = "<group>"; };
 		E22A6C5419C7B816CAF40C3C /* BlinkRateV1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkRateV1.swift; sourceTree = "<group>"; };
 		E2C8C8DC84555066228288A0 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 				4DB5A8BF4F70F13B2FDE5BC8 /* FaceTrackingCamera.swift */,
 				E5A3D632133947116F8A8CBA /* Graph.swift */,
 				A34BEF2BCB6CE04F6B51004B /* HealthBridge.swift */,
+				D9A41CDDBCA29BBB4E54CEDA /* HealthReader.swift */,
 				208A3660EDDBF13C10C05555 /* Models.swift */,
 				AF4AD05B7EC0B1512B233FB4 /* PositionSequence.swift */,
 				2A40A1362152152C08FE4568 /* ProfileView.swift */,
@@ -190,6 +193,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					1C9B3056EDB5A135C3C0DCBD = {
+						DevelopmentTeam = TR7PS55RCB;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 30FCF2A8453BADA803BF8E30 /* Build configuration list for PBXProject "Sideline" */;
@@ -240,6 +247,7 @@
 				37752E4929DA431BC37BFF19 /* GazeDeviationHorizontalV1.swift in Sources */,
 				4A7383C75057FCE139AD59F7 /* Graph.swift in Sources */,
 				C97A6EAE6A0A5044A7763FE1 /* HealthBridge.swift in Sources */,
+				BE360E021275DC823C6B8756 /* HealthReader.swift in Sources */,
 				8FEC8B1FAF331B114196D211 /* LiveTest.swift in Sources */,
 				E53924D5EBCFBB61D227ECE9 /* Models.swift in Sources */,
 				F4E52FB348707F1422798E9F /* PLRComputers.swift in Sources */,
@@ -273,6 +281,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sideline/Sideline.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = TR7PS55RCB;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Sideline uses the front camera to measure eye movement and pupil response during each check.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Sideline reads your sleep, heart rate and workouts as recovery context, and to check activity stays within your return-to-sport step.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Sideline saves each check and your baseline to Health as a clinical document with your biomarker results.";
@@ -280,7 +290,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.sideline.mock;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oculodx.sideline;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -364,6 +374,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sideline/Sideline.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = TR7PS55RCB;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Sideline uses the front camera to measure eye movement and pupil response during each check.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Sideline reads your sleep, heart rate and workouts as recovery context, and to check activity stays within your return-to-sport step.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Sideline saves each check and your baseline to Health as a clinical document with your biomarker results.";
@@ -371,7 +383,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.sideline.mock;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oculodx.sideline;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

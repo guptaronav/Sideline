@@ -3,7 +3,7 @@ import HealthKit
 
 /// Real HealthKit for the push side: the iOS permission sheet, and each check saved to Health as a clinical
 /// document (CDA). Health has no native type for these eye biomarkers, so the document carries them as a table.
-/// The read side shown in the app is demo data (HealthSnapshot); the simulator's Health store starts empty.
+/// Reading from Health (sleep, heart rate, workouts) is HealthReader.
 enum HealthBridge {
     static let store = HKHealthStore()
 
