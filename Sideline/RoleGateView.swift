@@ -28,7 +28,8 @@ struct RoleGateView: View {
         ZStack {
             Palette.brand.ignoresSafeArea()
             // Respect the side safe area like Apple's own apps on iPhone Duo: content stops at the camera strip.
-            SignInArtwork(compact: true).ignoresSafeArea(edges: [.top, .bottom])
+            // The sideline ruler and runner, full height. The trailing safe area keeps the ruler clear of a side camera strip (iPhone Duo).
+            SignInArtwork().ignoresSafeArea(edges: [.top, .bottom, .leading])
             VStack(alignment: .leading, spacing: 0) {
                 logo.padding(.top, 24)
                 Spacer()
