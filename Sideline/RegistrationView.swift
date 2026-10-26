@@ -41,7 +41,7 @@ struct RegistrationView: View {
     @State private var name = ""
     @State private var email = ""
     @State private var password = ""
-    @State private var organization = "Empower MMA"
+    @State private var organization = "Ridgeline Academy"
     @State private var teamName = "Youth team"
     @State private var sport: Sport = .mma
     @State private var showSportPicker = false
@@ -154,10 +154,10 @@ struct RegistrationView: View {
             field("number", "Team code", text: $teamCode)
             if foundTeam {
                 HStack(spacing: 12) {
-                    IconTile(symbol: "figure.martial.arts", tint: Team.empower.color, size: 44)
+                    IconTile(symbol: "figure.martial.arts", tint: Team.ridgeline.color, size: 44)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Empower MMA · Youth team").font(.system(size: 16, weight: .semibold)).foregroundStyle(Palette.ink)
-                        Text("Coach Ronav Gupta").font(Typeface.caption).foregroundStyle(Palette.muted)
+                        Text("Ridgeline Academy · Youth team").font(.system(size: 16, weight: .semibold)).foregroundStyle(Palette.ink)
+                        Text("Coach Sid Gupta").font(Typeface.caption).foregroundStyle(Palette.muted)
                     }
                     Spacer()
                     Image(systemName: Icon.check).foregroundStyle(Palette.steady).font(.system(size: 20))
@@ -246,7 +246,7 @@ struct RegistrationView: View {
         let display = name.trimmingCharacters(in: .whitespaces)
         switch role {
         case .coach:
-            session.account = sport == .basketball ? .hayes : .ronav
+            session.account = sport == .basketball ? .hayes : .sid
         case .athlete:
             let id = store.addAthlete(name: display, squad: .mmaYouth)
             session.account = .priya

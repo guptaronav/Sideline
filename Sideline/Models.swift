@@ -27,10 +27,10 @@ enum Role: String, CaseIterable, Identifiable {
 }
 
 enum Team: String {
-    case empower, chesapeake
+    case ridgeline, chesapeake
 
-    var name: String { self == .empower ? "Empower MMA" : "Chesapeake State" }
-    var squad: String { self == .empower ? "Youth MMA team · ages 11–14" : "Men’s basketball" }
+    var name: String { self == .ridgeline ? "Ridgeline Academy" : "Chesapeake State" }
+    var squad: String { self == .ridgeline ? "Youth MMA team · ages 11–14" : "Men’s basketball" }
 }
 
 /// A coach can run more than one team.
@@ -38,7 +38,7 @@ enum Squad: String, CaseIterable, Identifiable, Hashable {
     case mmaYouth, mmaTeen, mensBasketball, womensBasketball
     var id: String { rawValue }
 
-    var team: Team { self == .mmaYouth || self == .mmaTeen ? .empower : .chesapeake }
+    var team: Team { self == .mmaYouth || self == .mmaTeen ? .ridgeline : .chesapeake }
 
     var name: String {
         switch self {
@@ -61,12 +61,12 @@ enum Squad: String, CaseIterable, Identifiable, Hashable {
 
 /// Each demo account is a different person signing in. Each sees only their own app.
 enum DemoAccount: String, CaseIterable, Identifiable {
-    case ronav, hayes, dana, marcus, priya, jalen, okafor
+    case sid, hayes, dana, marcus, priya, jalen, okafor
     var id: String { rawValue }
 
     var name: String {
         switch self {
-        case .ronav:  "Ronav Gupta"
+        case .sid:  "Sid Gupta"
         case .hayes:  "Andre Hayes"
         case .dana:   "Dana Whitfield"
         case .marcus: "Marcus Bell"
@@ -78,11 +78,11 @@ enum DemoAccount: String, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .ronav:  "Instructor · 1st degree black belt"
+        case .sid:  "Instructor · 1st degree black belt"
         case .hayes:  "Head coach · Men’s basketball"
-        case .dana:   "Coach · Empower MMA youth team"
+        case .dana:   "Coach · Ridgeline Academy youth team"
         case .marcus: "Athletic trainer · Chesapeake State basketball"
-        case .priya:  "Athlete · 13 · Empower MMA, yellow belt"
+        case .priya:  "Athlete · 13 · Ridgeline Academy, yellow belt"
         case .jalen:  "Athlete · 20 · Chesapeake State, guard"
         case .okafor: "Team physician · sports medicine"
         }
@@ -90,7 +90,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
 
     var role: Role {
         switch self {
-        case .ronav, .hayes, .dana, .marcus:  .coach
+        case .sid, .hayes, .dana, .marcus:  .coach
         case .priya, .jalen:  .athlete
         case .okafor:         .provider
         }
@@ -98,7 +98,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
 
     var team: Team? {
         switch self {
-        case .ronav, .dana, .priya:   .empower
+        case .sid, .dana, .priya:   .ridgeline
         case .hayes, .marcus, .jalen: .chesapeake
         case .okafor:         nil
         }
@@ -106,11 +106,11 @@ enum DemoAccount: String, CaseIterable, Identifiable {
 
     var email: String {
         switch self {
-        case .ronav:  "ronav@empowermma.com"
+        case .sid:  "sid@ridgelineacademy.com"
         case .hayes:  "andre@chessu.edu"
-        case .dana:   "dana@empowermma.com"
+        case .dana:   "dana@ridgelineacademy.com"
         case .marcus: "marcus@chessu.edu"
-        case .priya:  "priya@empowermma.com"
+        case .priya:  "priya@ridgelineacademy.com"
         case .jalen:  "jalen@chessu.edu"
         case .okafor: "tom@chessu.edu"
         }
@@ -121,7 +121,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
         case .dana:   AvatarLook(skin: 0xE8B48F, hair: .short, hairColor: 0x3B2618, kit: .polo(color: 0x0E6E6A), backdrop: 0xDDEFEB)
         case .marcus: AvatarLook(skin: 0x7A4A2E, hair: .buzz, hairColor: 0x141414, kit: .polo(color: 0x13294B), backdrop: 0xE3E8F2)
         case .hayes:  AvatarLook(skin: 0x5A3825, hair: .buzz, hairColor: 0x141414, kit: .polo(color: 0x13294B), backdrop: 0xE3E8F2)
-        case .ronav:  AvatarLook(skin: 0xC98E62, hair: .short, hairColor: 0x1E1A1A, kit: .polo(color: 0x0E6E6A), backdrop: 0xDDEFEB)
+        case .sid:  AvatarLook(skin: 0xC98E62, hair: .short, hairColor: 0x1E1A1A, kit: .polo(color: 0x0E6E6A), backdrop: 0xDDEFEB)
         case .priya:  Athlete.sample.first { $0.number == 51 }!.look
         case .jalen:  Athlete.sample.first { $0.number == 3 }!.look
         case .okafor: AvatarLook(skin: 0x5A3825, hair: .short, hairColor: 0x2A2A2A, kit: .polo(color: 0x2B2F36), backdrop: 0xECEDEF)
@@ -130,7 +130,7 @@ enum DemoAccount: String, CaseIterable, Identifiable {
 
     var squads: [Squad] {
         switch self {
-        case .ronav, .dana: [.mmaYouth, .mmaTeen]
+        case .sid, .dana: [.mmaYouth, .mmaTeen]
         case .hayes:        [.mensBasketball]
         case .marcus: [.mensBasketball, .womensBasketball]
         default:      []
@@ -362,7 +362,7 @@ struct Athlete: Identifiable, Equatable {
     var history: [DayReading] = []
     var injuryMetrics: [Metric] = []
     var events: [LogEvent] = []
-    var team: Team = .empower
+    var team: Team = .ridgeline
     var hasBaseline = true
     /// The athlete's one personal baseline, by date. It isn't tied to a team, season or sport.
     var baselineDate: String? = nil
@@ -389,9 +389,9 @@ struct Athlete: Identifiable, Equatable {
     }
 
     /// Sports this athlete plays. Defaults to their team's sport until they pick more.
-    var sports: Set<Sport> { sportsOverride ?? [team == .empower ? .mma : .basketball] }
+    var sports: Set<Sport> { sportsOverride ?? [team == .ridgeline ? .mma : .basketball] }
     var badge: String { team == .chesapeake ? "#\(number)" : "" }
-    var squad: Squad { squadOverride ?? (team == .empower ? .mmaYouth : .mensBasketball) }
+    var squad: Squad { squadOverride ?? (team == .ridgeline ? .mmaYouth : .mensBasketball) }
     /// Belt for martial arts, number and position for basketball.
     var position: String {
         let tail = sport.components(separatedBy: " · ").last ?? ""
@@ -483,8 +483,8 @@ extension Athlete {
     }
 
     private static let rawSample: [Athlete] = [
-        // Empower MMA youth team
-        Athlete(number: 51, name: "Priya Nair", sport: "Empower MMA · Yellow belt",
+        // Ridgeline Academy youth team
+        Athlete(number: 51, name: "Priya Nair", sport: "Ridgeline Academy · Yellow belt",
                 status: .recovering(step: 2), detail: "Day 4 · step 2 of 6",
                 history: series([2.6, 2.2, 1.6]),
                 events: [
@@ -493,21 +493,21 @@ extension Athlete {
                     event("Day 2", .system, "Daily check: 3 biomarkers below normal. Step 2."),
                     event("Day 3", .system, "Daily check: 2 biomarkers below normal. Holding step 2."),
                 ],
-                team: .empower, look: AvatarLook(skin: 0xC98E62, hair: .long, hairColor: 0x1E1A1A, kit: .gi(belt: Belt.yellow), backdrop: 0xDDEFEB)),
-        Athlete(number: 52, name: "Maya Reyes", sport: "Empower MMA · Orange belt",
-                status: .baselineSet, detail: "Baseline Aug 18", team: .empower, look: AvatarLook(skin: 0xE8B48F, hair: .ponytail, hairColor: 0x3B2618, kit: .gi(belt: Belt.orange), backdrop: 0xDDEFEB)),
-        Athlete(number: 53, name: "Leo Kowalski", sport: "Empower MMA · Green belt",
-                status: .baselineSet, detail: "Baseline Aug 18", team: .empower, look: AvatarLook(skin: 0xF5D3B3, hair: .short, hairColor: 0xC99A4B, kit: .gi(belt: Belt.yellow), backdrop: 0xDDEFEB)),
-        Athlete(number: 54, name: "Casey Lin", sport: "Empower MMA · White belt",
-                status: .baselineSet, detail: "No baseline yet", team: .empower, hasBaseline: false, look: AvatarLook(skin: 0xEBC5A0, hair: .short, hairColor: 0x1E1A1A, kit: .gi(belt: Belt.white), backdrop: 0xDDEFEB)),
-        Athlete(number: 55, name: "Ethan Park", sport: "Empower MMA · Blue belt",
-                status: .baselineSet, detail: "Baseline Aug 18", team: .empower),
-        Athlete(number: 56, name: "Amara Okoye", sport: "Empower MMA · Yellow belt",
-                status: .baselineSet, detail: "Baseline Aug 18", team: .empower),
-        Athlete(number: 57, name: "Diego Ramirez", sport: "Empower MMA · Orange belt",
-                status: .baselineSet, detail: "Baseline Aug 18", team: .empower),
-        Athlete(number: 58, name: "Hana Sato", sport: "Empower MMA · Yellow belt",
-                status: .baselineSet, detail: "Baseline Aug 18", team: .empower),
+                team: .ridgeline, look: AvatarLook(skin: 0xC98E62, hair: .long, hairColor: 0x1E1A1A, kit: .gi(belt: Belt.yellow), backdrop: 0xDDEFEB)),
+        Athlete(number: 52, name: "Maya Reyes", sport: "Ridgeline Academy · Orange belt",
+                status: .baselineSet, detail: "Baseline Aug 18", team: .ridgeline, look: AvatarLook(skin: 0xE8B48F, hair: .ponytail, hairColor: 0x3B2618, kit: .gi(belt: Belt.orange), backdrop: 0xDDEFEB)),
+        Athlete(number: 53, name: "Leo Kowalski", sport: "Ridgeline Academy · Green belt",
+                status: .baselineSet, detail: "Baseline Aug 18", team: .ridgeline, look: AvatarLook(skin: 0xF5D3B3, hair: .short, hairColor: 0xC99A4B, kit: .gi(belt: Belt.yellow), backdrop: 0xDDEFEB)),
+        Athlete(number: 54, name: "Casey Lin", sport: "Ridgeline Academy · White belt",
+                status: .baselineSet, detail: "No baseline yet", team: .ridgeline, hasBaseline: false, look: AvatarLook(skin: 0xEBC5A0, hair: .short, hairColor: 0x1E1A1A, kit: .gi(belt: Belt.white), backdrop: 0xDDEFEB)),
+        Athlete(number: 55, name: "Ethan Park", sport: "Ridgeline Academy · Blue belt",
+                status: .baselineSet, detail: "Baseline Aug 18", team: .ridgeline),
+        Athlete(number: 56, name: "Amara Okoye", sport: "Ridgeline Academy · Yellow belt",
+                status: .baselineSet, detail: "Baseline Aug 18", team: .ridgeline),
+        Athlete(number: 57, name: "Diego Ramirez", sport: "Ridgeline Academy · Orange belt",
+                status: .baselineSet, detail: "Baseline Aug 18", team: .ridgeline),
+        Athlete(number: 58, name: "Hana Sato", sport: "Ridgeline Academy · Yellow belt",
+                status: .baselineSet, detail: "Baseline Aug 18", team: .ridgeline),
         // Chesapeake State men's basketball
         Athlete(number: 3, name: "Jalen Brooks", sport: "Men’s basketball · Guard",
                 status: .baselineSet, detail: "Baseline not recorded", team: .chesapeake, hasBaseline: false, look: AvatarLook(skin: 0x5A3825, hair: .buzz, hairColor: 0x141414, kit: .jersey(number: 3, color: 0x13294B, trim: 0xF2A900), backdrop: 0xE3E8F2)),
@@ -542,14 +542,14 @@ extension Athlete {
                 status: .baselineSet, detail: "Baseline Aug 14", team: .chesapeake),
         Athlete(number: 31, name: "Liam O’Connor", sport: "Men’s basketball · Center",
                 status: .baselineSet, detail: "Baseline Aug 14", team: .chesapeake),
-        // Empower MMA teen team
-        Athlete(number: 61, name: "Aiden Cho", sport: "Empower MMA · Brown belt", status: .baselineSet,
-                detail: "Baseline Aug 19", team: .empower, squadOverride: .mmaTeen),
-        Athlete(number: 62, name: "Zara Ahmed", sport: "Empower MMA · Purple belt", status: .baselineSet,
-                detail: "Baseline Aug 19", team: .empower, squadOverride: .mmaTeen),
-        Athlete(number: 63, name: "Mateo Silva", sport: "Empower MMA · Blue belt", status: .recovering(step: 4),
+        // Ridgeline Academy teen team
+        Athlete(number: 61, name: "Aiden Cho", sport: "Ridgeline Academy · Brown belt", status: .baselineSet,
+                detail: "Baseline Aug 19", team: .ridgeline, squadOverride: .mmaTeen),
+        Athlete(number: 62, name: "Zara Ahmed", sport: "Ridgeline Academy · Purple belt", status: .baselineSet,
+                detail: "Baseline Aug 19", team: .ridgeline, squadOverride: .mmaTeen),
+        Athlete(number: 63, name: "Mateo Silva", sport: "Ridgeline Academy · Blue belt", status: .recovering(step: 4),
                 detail: "Day 8 · step 4 of 6", history: [DayReading(day: 1, distance: 2.5), DayReading(day: 2, distance: 1.6), DayReading(day: 3, distance: 0.9)],
-                team: .empower, squadOverride: .mmaTeen),
+                team: .ridgeline, squadOverride: .mmaTeen),
         // Chesapeake State women's basketball
         Athlete(number: 5, name: "Kayla Johnson", sport: "Women’s basketball · Guard", status: .baselineSet,
                 detail: "Baseline Aug 15", team: .chesapeake, squadOverride: .womensBasketball),
@@ -599,12 +599,12 @@ final class Session {
         switch UserDefaults.standard.string(forKey: "demoAccount") ?? "" {
         case "player": .priya
         case "doctor": .okafor
-        case let id: DemoAccount(rawValue: id) ?? .ronav
+        case let id: DemoAccount(rawValue: id) ?? .sid
         }
     }
     var role: Role? { account?.role }
     var athleteID: Int { athleteOverride ?? account?.athleteID ?? 51 }
-    var team: Team { account?.team ?? .empower }
+    var team: Team { account?.team ?? .ridgeline }
     let providerName = "T. Okafor, MD"
 }
 
@@ -628,7 +628,7 @@ final class Store {
     func addAthlete(name: String, squad: Squad) -> Int {
         let id = (athletes.map(\.number).max() ?? 100) + 1
         athletes.append(Athlete(number: id, name: name.isEmpty ? "New athlete" : name,
-                                sport: squad.team == .empower ? "Empower MMA · White belt" : "Men’s basketball · Guard",
+                                sport: squad.team == .ridgeline ? "Ridgeline Academy · White belt" : "Men’s basketball · Guard",
                                 status: .baselineSet, detail: "Joined today", team: squad.team,
                                 hasBaseline: false, squadOverride: squad))
         return id
@@ -893,7 +893,7 @@ extension Athlete {
                 + readings.indices.dropFirst().map { event("Day \($0)", .system, "Daily check. Step \(min($0, step)).") }
         }
         switch a.number {
-        // Empower MMA youth
+        // Ridgeline Academy youth
         case 51: a.lastTest = .demo(daysAgo: 1, hour: 19, minute: 40)                          // Priya: daily check due today
         case 52: a.baselineDate = "Sep 6"; cleared(7, 17, 20); a.sportsOverride = [.mma, .soccer]
         case 53:                                                                               // Leo: signed off, back in play
@@ -917,7 +917,7 @@ extension Athlete {
         case 56: a.baselineDate = "Aug 18"; a.sportsOverride = [.mma, .gymnastics]
         case 57: a.baselineDate = "Sep 2"; recovering(4, [2.4, 1.9, 1.4, 1.0, 0.85], lastDaysAgo: 0, h: 7, m: 5, doneToday: true)
         case 58: a.baselineDate = "Sep 12"; cleared(3, 18, 45)
-        // Empower MMA teens
+        // Ridgeline Academy teens
         case 61: a.baselineDate = "Aug 19"; a.lastTest = .demo(monthDay: "Aug 19")
         case 62: a.baselineDate = "Aug 19"; cleared(1, 19, 30); a.sportsOverride = [.mma, .wrestling]
         case 63: a.lastTest = .demo(daysAgo: 3, hour: 18, minute: 5)                            // Mateo: daily check overdue
