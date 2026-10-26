@@ -39,8 +39,7 @@ struct RosterView: View {
         VStack(alignment: .leading, spacing: 10) {
             RoleBar(title: "Coach view")
             Eyebrow("Ridgeline High · Athletics")
-            (Text("Sideline").foregroundColor(Palette.ink) + Text(".").foregroundColor(Palette.flag))
-                .font(Typeface.display(40))
+            SidelineLockup(size: 40)
             HashRule()
             Text(attentionCount == 0
                  ? "No athletes need attention."

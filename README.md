@@ -21,6 +21,15 @@ Regenerate the project after adding files: `xcodegen generate` (spec in `project
 Paper, ink, one flag color (vermilion), one steady color (pine). Serif headlines, monospaced
 measurements, yard-line hash marks as dividers. Tokens live in `Theme.swift`.
 
+## Brand
+Design system PDF: `docs/brand/sideline-design-system.pdf` (rationale, logo, lockups, app icon, clear space, misuse).
+- Symbol and lockups: `Brand/*.svg`. The lockup wordmark is live text until it is outlined for release.
+- App icon (light, dark, tinted): `Sideline/Assets.xcassets/AppIcon.appiconset`. Regenerate everything with
+  `python3 -I Brand/make_brand_assets.py` (needs Pillow).
+- In code: `SidelineSymbol` and `SidelineLockup` in `Sideline/Brand.swift`.
+- Rules: the symbol is always ink or paper, never flag-colored; keep the sideline vertical; clear space is one pupil diameter.
+- Not yet applied: the PDF's style guide and screens sections were not in the export, so type, color and layout tokens are unchanged.
+
 ## Safety rules baked into the copy
 The app never says "cleared", "safe to play" or "no concussion". It reports measurements,
 says "remove from play", and records a provider's decision. Return to play stays with a
