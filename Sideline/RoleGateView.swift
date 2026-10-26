@@ -55,7 +55,7 @@ struct RoleGateView: View {
         HStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
                 Palette.brand
-                SignInArtwork()
+                SignInArtwork(rulerAt: 0.74)
                 VStack(alignment: .leading, spacing: 0) {
                     logo
                     Spacer()
