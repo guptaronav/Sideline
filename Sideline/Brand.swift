@@ -24,16 +24,17 @@ struct SidelineSymbol: Shape {
 /// The wordmark is Newsreader in the design system; the system serif stands in until it is bundled.
 struct SidelineLockup: View {
     var size: CGFloat = 40
+    var color: Color = Palette.ink
 
     var body: some View {
         HStack(spacing: size * 0.3) {
             SidelineSymbol()
-                .fill(Palette.ink)
+                .fill(color)
                 .frame(width: size * 1.03, height: size * 1.03)
             Text("Sideline")
                 .font(Typeface.display(size))
                 .tracking(-size * 0.01)
-                .foregroundStyle(Palette.ink)
+                .foregroundStyle(color)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Sideline")

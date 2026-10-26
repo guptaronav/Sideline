@@ -32,12 +32,22 @@ struct ResultView: View {
                 .font(Typeface.display(44))
                 .foregroundStyle(Palette.ink)
             Rectangle().fill(Palette.flag).frame(width: 56, height: 4)
-            Text("Eye-tracking and pupil measurements differ from this athlete's own baseline. Do not return to activity until a healthcare provider has evaluated them.")
+            Text("Do not return to activity until a healthcare provider has evaluated \(athlete.firstName).")
                 .font(Typeface.body)
                 .foregroundStyle(Palette.ink)
-            Text("\(outside) of \(athlete.injuryMetrics.count) measures outside their range")
-                .font(Typeface.mono(14, weight: .semibold))
-                .foregroundStyle(Palette.flag)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Concussion model \(String(format: "%.2f", ConcussionModel.probability(ConcussionModel.concussed))) · \(ConcussionModel.flags(ConcussionModel.concussed).count) of 4 areas flagged")
+                    .font(Typeface.mono(14, weight: .semibold))
+                    .foregroundStyle(Palette.flag)
+                ForEach(ConcussionModel.flags(ConcussionModel.concussed)) { flag in
+                    Text("• \(flag.text) (\(flag.test.name))")
+                        .font(Typeface.caption)
+                        .foregroundStyle(Palette.ink)
+                }
+                Text("\(outside) of \(athlete.injuryMetrics.count) measures outside \(athlete.firstName)'s range. Close-up Eye Photo saved for the clinician.")
+                    .font(Typeface.caption)
+                    .foregroundStyle(Palette.muted)
+            }
         }
     }
 

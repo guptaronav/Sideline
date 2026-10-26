@@ -7,37 +7,48 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0199C41E4EDAAAB3A0E9B923 /* RegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26D0E3B83B5FE003E8A81A2C /* RegistrationView.swift */; };
 		28BD4BC61DE683F692C4D516 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B0997CEABF87B4B4B3D59AC /* Theme.swift */; };
 		37AA6E8AD580C99636267800 /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E9AAB106F8BBBE166111FEC /* Brand.swift */; };
 		3A3DD2211138E2EE98CBCE19 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A41C4D3C466BA87F26026E61 /* Assets.xcassets */; };
 		3E6B77FCF454DF1757768254 /* AthleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592F9EC0DD3D2A495E9FBBAC /* AthleteView.swift */; };
 		41EC64D475B0375844F31AE2 /* CheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32A6E6210B93A7212CA13C1 /* CheckView.swift */; };
+		4A7383C75057FCE139AD59F7 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A3D632133947116F8A8CBA /* Graph.swift */; };
 		572650BE016F2C0FB6F25795 /* SidelineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5610B6ABBCB292364C14EF1 /* SidelineApp.swift */; };
+		7565918952ADD26F58CADA39 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A40A1362152152C08FE4568 /* ProfileView.swift */; };
 		7F288433D4F4F06091AC5723 /* ProviderDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15BEA8BCA4AE3AC8DEFB31E /* ProviderDashboardView.swift */; };
 		879F83742D078A992005AC7B /* RosterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9CAD7792F5D31FE4209A780 /* RosterView.swift */; };
 		93D3876983D81ECE7C2573EB /* RoleGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5770CBA60A676B7BB1AE95 /* RoleGateView.swift */; };
+		99CE70E7A72FD385215858A3 /* AppleHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C17794A143E9217A3F8F3F /* AppleHealthView.swift */; };
 		B048CCEC6FCE033BC6CE2D73 /* ReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C014638D9CFDD7DBA6C00271 /* ReportView.swift */; };
 		C0A65F85381120F19F8E3F72 /* RecoveryComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49AA4EA0239D7825F3AE8BF /* RecoveryComponents.swift */; };
+		C97A6EAE6A0A5044A7763FE1 /* HealthBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A34BEF2BCB6CE04F6B51004B /* HealthBridge.swift */; };
+		C9FB38EDE44F3C9CB509A09D /* Avatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0961B529420EE7AA45D16F26 /* Avatar.swift */; };
 		CB7881B5A399EE021A85F44C /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C8C8DC84555066228288A0 /* ResultView.swift */; };
-		D37E8DA309CBD34A321C5E11 /* SymptomCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC5D1308227084C2B7BB2F2 /* SymptomCheckInView.swift */; };
 		E53924D5EBCFBB61D227ECE9 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208A3660EDDBF13C10C05555 /* Models.swift */; };
 		F6B066805130A6913946B42B /* AthleteDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB824D4C1D6EABEF58CB2A80 /* AthleteDashboardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0961B529420EE7AA45D16F26 /* Avatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar.swift; sourceTree = "<group>"; };
 		0E9AAB106F8BBBE166111FEC /* Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brand.swift; sourceTree = "<group>"; };
 		10CD784DBD346AEBE64DD90B /* Sideline.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Sideline.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B0997CEABF87B4B4B3D59AC /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
-		1DC5D1308227084C2B7BB2F2 /* SymptomCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymptomCheckInView.swift; sourceTree = "<group>"; };
+		1FB7BB4BDA28451CA994C2A1 /* Sideline.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Sideline.entitlements; sourceTree = "<group>"; };
 		208A3660EDDBF13C10C05555 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		26D0E3B83B5FE003E8A81A2C /* RegistrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationView.swift; sourceTree = "<group>"; };
+		2A40A1362152152C08FE4568 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		592F9EC0DD3D2A495E9FBBAC /* AthleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteView.swift; sourceTree = "<group>"; };
+		A34BEF2BCB6CE04F6B51004B /* HealthBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthBridge.swift; sourceTree = "<group>"; };
 		A41C4D3C466BA87F26026E61 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A9C17794A143E9217A3F8F3F /* AppleHealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleHealthView.swift; sourceTree = "<group>"; };
 		C014638D9CFDD7DBA6C00271 /* ReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportView.swift; sourceTree = "<group>"; };
 		C32A6E6210B93A7212CA13C1 /* CheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckView.swift; sourceTree = "<group>"; };
 		C9CAD7792F5D31FE4209A780 /* RosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterView.swift; sourceTree = "<group>"; };
 		D49AA4EA0239D7825F3AE8BF /* RecoveryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryComponents.swift; sourceTree = "<group>"; };
 		E15BEA8BCA4AE3AC8DEFB31E /* ProviderDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderDashboardView.swift; sourceTree = "<group>"; };
 		E2C8C8DC84555066228288A0 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		E5A3D632133947116F8A8CBA /* Graph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Graph.swift; sourceTree = "<group>"; };
 		EF5770CBA60A676B7BB1AE95 /* RoleGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleGateView.swift; sourceTree = "<group>"; };
 		F5610B6ABBCB292364C14EF1 /* SidelineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidelineApp.swift; sourceTree = "<group>"; };
 		FB824D4C1D6EABEF58CB2A80 /* AthleteDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteDashboardView.swift; sourceTree = "<group>"; };
@@ -47,20 +58,26 @@
 		04CBCE90611869E71820042B /* Sideline */ = {
 			isa = PBXGroup;
 			children = (
+				A9C17794A143E9217A3F8F3F /* AppleHealthView.swift */,
 				A41C4D3C466BA87F26026E61 /* Assets.xcassets */,
 				FB824D4C1D6EABEF58CB2A80 /* AthleteDashboardView.swift */,
 				592F9EC0DD3D2A495E9FBBAC /* AthleteView.swift */,
+				0961B529420EE7AA45D16F26 /* Avatar.swift */,
 				0E9AAB106F8BBBE166111FEC /* Brand.swift */,
 				C32A6E6210B93A7212CA13C1 /* CheckView.swift */,
+				E5A3D632133947116F8A8CBA /* Graph.swift */,
+				A34BEF2BCB6CE04F6B51004B /* HealthBridge.swift */,
 				208A3660EDDBF13C10C05555 /* Models.swift */,
+				2A40A1362152152C08FE4568 /* ProfileView.swift */,
 				E15BEA8BCA4AE3AC8DEFB31E /* ProviderDashboardView.swift */,
 				D49AA4EA0239D7825F3AE8BF /* RecoveryComponents.swift */,
+				26D0E3B83B5FE003E8A81A2C /* RegistrationView.swift */,
 				C014638D9CFDD7DBA6C00271 /* ReportView.swift */,
 				E2C8C8DC84555066228288A0 /* ResultView.swift */,
 				EF5770CBA60A676B7BB1AE95 /* RoleGateView.swift */,
 				C9CAD7792F5D31FE4209A780 /* RosterView.swift */,
+				1FB7BB4BDA28451CA994C2A1 /* Sideline.entitlements */,
 				F5610B6ABBCB292364C14EF1 /* SidelineApp.swift */,
-				1DC5D1308227084C2B7BB2F2 /* SymptomCheckInView.swift */,
 				1B0997CEABF87B4B4B3D59AC /* Theme.swift */,
 			);
 			path = Sideline;
@@ -149,19 +166,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				99CE70E7A72FD385215858A3 /* AppleHealthView.swift in Sources */,
 				F6B066805130A6913946B42B /* AthleteDashboardView.swift in Sources */,
 				3E6B77FCF454DF1757768254 /* AthleteView.swift in Sources */,
+				C9FB38EDE44F3C9CB509A09D /* Avatar.swift in Sources */,
 				37AA6E8AD580C99636267800 /* Brand.swift in Sources */,
 				41EC64D475B0375844F31AE2 /* CheckView.swift in Sources */,
+				4A7383C75057FCE139AD59F7 /* Graph.swift in Sources */,
+				C97A6EAE6A0A5044A7763FE1 /* HealthBridge.swift in Sources */,
 				E53924D5EBCFBB61D227ECE9 /* Models.swift in Sources */,
+				7565918952ADD26F58CADA39 /* ProfileView.swift in Sources */,
 				7F288433D4F4F06091AC5723 /* ProviderDashboardView.swift in Sources */,
 				C0A65F85381120F19F8E3F72 /* RecoveryComponents.swift in Sources */,
+				0199C41E4EDAAAB3A0E9B923 /* RegistrationView.swift in Sources */,
 				B048CCEC6FCE033BC6CE2D73 /* ReportView.swift in Sources */,
 				CB7881B5A399EE021A85F44C /* ResultView.swift in Sources */,
 				93D3876983D81ECE7C2573EB /* RoleGateView.swift in Sources */,
 				879F83742D078A992005AC7B /* RosterView.swift in Sources */,
 				572650BE016F2C0FB6F25795 /* SidelineApp.swift in Sources */,
-				D37E8DA309CBD34A321C5E11 /* SymptomCheckInView.swift in Sources */,
 				28BD4BC61DE683F692C4D516 /* Theme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -173,7 +195,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sideline/Sideline.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Sideline reads your sleep, heart rate and workouts as recovery context, and to check activity stays within your return-to-sport step.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Sideline saves each check and your baseline to Health as a clinical document with your biomarker results.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -240,6 +265,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Sideline;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 0.1;
@@ -251,7 +277,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -259,7 +285,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sideline/Sideline.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Sideline reads your sleep, heart rate and workouts as recovery context, and to check activity stays within your return-to-sport step.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Sideline saves each check and your baseline to Health as a clinical document with your biomarker results.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -320,6 +349,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Sideline;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 0.1;
@@ -330,7 +360,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
