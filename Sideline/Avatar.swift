@@ -132,7 +132,7 @@ struct PlayerPhoto: View {
             // The signed-in athlete's own uploaded photo wins over the bundled one.
             if session.athleteID == athlete.id, session.role == .athlete, let data = session.photo, let ui = UIImage(data: data) {
                 Image(uiImage: ui).resizable().scaledToFill()
-            } else if let ui = UIImage(named: "photo-\(athlete.firstName.lowercased())") {
+            } else if let ui = UIImage(named: photoName(athlete.name)) {
                 Image(uiImage: ui).resizable().scaledToFill()
             } else {
                 PhotoPlaceholder(size: size, square: square)
@@ -141,4 +141,11 @@ struct PlayerPhoto: View {
         .frame(width: size, height: size)
         .clipShape(square ? AnyShape(RoundedRectangle(cornerRadius: 16)) : AnyShape(Circle()))
     }
+}
+
+/// Asset name for a person's bundled photo: "photo-" + first name, lowercased, accents and titles dropped.
+/// "Tomás Herrera" → photo-tomas, "Dr. Tom Okafor" → photo-tom.
+func photoName(_ fullName: String) -> String {
+    let first = fullName.split(separator: " ").first { !$0.hasSuffix(".") } ?? ""
+    return "photo-" + first.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .init(identifier: "en_US")).lowercased()
 }
