@@ -29,7 +29,7 @@ struct RoleGateView: View {
             Palette.brand.ignoresSafeArea()
             // Respect the side safe area like Apple's own apps on iPhone Duo: content stops at the camera strip.
             // The sideline ruler and runner, full height. The trailing safe area keeps the ruler clear of a side camera strip (iPhone Duo).
-            SignInArtwork().ignoresSafeArea(edges: [.top, .bottom, .leading])
+            SignInArtwork(rulerAt: 0.82).ignoresSafeArea(edges: [.top, .bottom, .leading])
             VStack(alignment: .leading, spacing: 0) {
                 logo.padding(.top, 24)
                 Spacer()
@@ -238,6 +238,8 @@ private struct SignInArtwork: View {
     /// Phones: runner only, small, in the empty band beside the logo so it never sits behind text.
     /// A full-height sideline reads as a divider next to a side camera strip (iPhone Duo).
     var compact = false
+    /// Where the sideline ruler sits, as a fraction of the width.
+    var rulerAt: CGFloat = 0.93
 
     var body: some View {
         GeometryReader { geo in
@@ -255,7 +257,7 @@ private struct SignInArtwork: View {
             ZStack(alignment: .topTrailing) {
                 Canvas { ctx, _ in
                     var lines = Path()
-                    let x = w * 0.93
+                    let x = w * rulerAt
                     lines.move(to: CGPoint(x: x, y: 0)); lines.addLine(to: CGPoint(x: x, y: h))
                     var y: CGFloat = 20
                     var i = 0
