@@ -1,4 +1,4 @@
-# Sideline (mock)
+# Sideline
 
 A SwiftUI demo of the Sideline concept for video use. **Nothing here is real:** the eye-tracking
 capture is scripted, no camera is used, and every athlete and measurement is fictional.
